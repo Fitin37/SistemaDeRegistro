@@ -32,7 +32,7 @@ const useDataEmpleado = () => {
       
       console.log('🚀 Iniciando petición a la API de empleados...');
       
-      const response = await axios.get('https://sistemaderegistro.onrender.com/api/clientes');
+      const response = await axios.get('https://sistemaderegistro2.onrender.com/api/clientes');
       
       console.log('📡 Status de la respuesta:', response.status);
       console.log('📋 Datos recibidos completos:', response.data);
@@ -156,7 +156,7 @@ const useDataEmpleado = () => {
     setShowConfirmDelete(false);
     try {
       console.log(`🗑️ Eliminando empleado ${selectedEmpleados._id}`);
-      await axios.delete(`https://sistemaderegistro.onrender.com/api/clientes/${selectedEmpleados._id}`);
+      await axios.delete(`https://sistemaderegistro2.onrender.com/api/clientes/${selectedEmpleados._id}`);
       
       // Asegurar que empleados es un array antes de filtrar
       setEmpleados(prevEmpleados => 
@@ -215,11 +215,11 @@ const useDataEmpleado = () => {
     
     try {
       // Log detallado de lo que se está enviando
-      console.log('📤 Enviando actualización a:', `https://sistemaderegistro.onrender.com/api/clientes/${selectedEmpleados._id}`);
+      console.log('📤 Enviando actualización a:', `https://sistemaderegistro2.onrender.com/api/clientes/${selectedEmpleados._id}`);
 
       // Realizar la actualización
       const response = await axios.put(
-        `https://sistemaderegistro.onrender.com/api/clientes/${selectedEmpleados._id}`, 
+        `https://sistemaderegistro2.onrender.com/api/clientes/${selectedEmpleados._id}`, 
         formData,
         {
           headers: {

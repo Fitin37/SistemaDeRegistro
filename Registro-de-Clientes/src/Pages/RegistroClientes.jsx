@@ -115,10 +115,10 @@ const AgregarEmpleado = () => {
 
       console.log('=== DATOS A ENVIAR ===');
       console.log('=== ENVIANDO PETICIÓN ===');
-      console.log('URL:', 'https://sistemaderegistro.onrender.com/api/clientes');
+      console.log('URL:', 'https://sistemaderegistro2.onrender.com/api/clientes');
 
       // Enviar petición
-      const response = await axios.post('https://sistemaderegistro.onrender.com/api/clientes', formDataToSend, {
+      const response = await axios.post('https://sistemaderegistro2.onrender.com/api/clientes', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
