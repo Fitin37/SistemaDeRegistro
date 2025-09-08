@@ -9,8 +9,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
   origin: [
-    "https://rivera-project-dun.vercel.app",
-    "https://rivera-project-gp76.vercel.app"
+    "https://sistema-de-registro-kappa.vercel.app/"
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
