@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MoreHorizontal, User, Phone, Mail, Calendar, MapPin } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, User, Phone, Package, Calendar, MapPin, ShoppingBag } from 'lucide-react';
 
-const EmployeeDetailPanel = ({ 
-  selectedEmpleados, 
+const ClienteDetailPanel = ({ 
+  selectedEmpleados: selectedCliente, // Mantener compatibilidad con el hook
   closeDetailView, 
   handleOptionsClick 
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Activar loading cada vez que cambie el empleado seleccionado
+    // Activar loading cada vez que cambie el cliente seleccionado
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [selectedEmpleados]); // Se ejecuta cada vez que cambia selectedEmpleados
+  }, [selectedCliente]); // Se ejecuta cada vez que cambia selectedCliente
 
   if (isLoading) {
     return (
@@ -67,7 +67,7 @@ const EmployeeDetailPanel = ({
                 Cargando Perfil
               </h2>
               <p className="text-gray-300 text-lg">
-                Preparando información del empleado
+                Preparando información del cliente
               </p>
             </div>
 
@@ -115,7 +115,7 @@ const EmployeeDetailPanel = ({
               {/* Dynamic Loading Steps */}
               <div className="text-sm text-gray-400 animate-pulse">
                 <span className="inline-block text-fade">
-                  Verificando credenciales del empleado...
+                  Verificando información del cliente...
                 </span>
               </div>
             </div>
@@ -231,7 +231,7 @@ const EmployeeDetailPanel = ({
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h2 className="text-xl font-semibold text-gray-900">Detalles del Empleado</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Detalles del cliente</h2>
         </div>
         
         <div className="relative">
@@ -250,56 +250,59 @@ const EmployeeDetailPanel = ({
         <div className="text-center mb-10">
           <div className="relative inline-block">
             <div className="w-28 h-28 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg overflow-hidden" style={{background: 'linear-gradient(135deg, #5F8EAD 0%, #4a7ba7 100%)'}}>
-              {selectedEmpleados.img ? (
-                <img 
-                  src={selectedEmpleados.img} 
-                  alt={`${selectedEmpleados.name} ${selectedEmpleados.lastName}`}
-                  className="w-full h-full object-cover rounded-2xl"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <User className={`w-14 h-14 text-white ${selectedEmpleados.img ? 'hidden' : 'block'}`} />
+              <User className="w-14 h-14 text-white" />
             </div>
           </div>
-          <h3 className="font-bold text-xl mb-2 text-gray-900">{selectedEmpleados.name} {selectedEmpleados.lastName}</h3>
+          <h3 className="font-bold text-xl mb-2 text-gray-900">
+            {selectedCliente?.nombre || 'Cliente'}
+          </h3>
           
           <div className="flex justify-center space-x-3">
             <button className="p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-md" style={{backgroundColor: '#5D9646'}}>
               <Phone className="w-5 h-5 text-white" />
             </button>
             <button className="p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-md" style={{backgroundColor: '#5F8EAD'}}>
-              <Mail className="w-5 h-5 text-white" />
+              <ShoppingBag className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
 
         {/* Information Cards */}
         <div className="space-y-6">
-          {/* InformaciÃ³n Personal */}
+          {/* Información del Producto/Pedido */}
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 rounded-lg" style={{backgroundColor: '#5F8EAD'}}>
-                <User className="w-5 h-5 text-white" />
+                <Package className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-gray-900">Información Personal</span>
+              <span className="font-semibold text-gray-900">Información del Pedido</span>
             </div>
 
             <div className="space-y-4">
               <div>
-                <div className="text-sm font-medium text-gray-700 mb-1">Correo Electronico</div>
-                <div className="text-sm text-gray-600 break-words bg-white p-3 rounded-lg border">{selectedEmpleados.email}</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Producto</div>
+                <div className="text-sm text-gray-600 break-words bg-white p-3 rounded-lg border">
+                  {selectedCliente?.producto || 'No especificado'}
+                </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-700 mb-1">DUI</div>
-                <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border">{selectedEmpleados.dui}</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Fecha del Pedido</div>
+                <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" style={{color: '#5F8EAD'}} />
+                  {selectedCliente?.fechaPedido 
+                    ? new Date(selectedCliente.fechaPedido).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long', 
+                        day: 'numeric'
+                      })
+                    : 'No especificada'
+                  }
+                </div>
               </div>
             </div>
           </div>
 
-          {/* InformaciÃ³n de Contacto */}
+          {/* Información de Contacto */}
           <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 rounded-lg" style={{backgroundColor: '#5D9646'}}>
@@ -310,24 +313,52 @@ const EmployeeDetailPanel = ({
 
             <div className="space-y-4">
               <div>
-                <div className="text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Cliente</div>
                 <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
-                  {new Date(selectedEmpleados.birthDate).toLocaleDateString()}
+                  <User className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
+                  {selectedCliente?.nombre || 'No especificado'}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-700 mb-1">TelÃ©fono</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Teléfono</div>
                 <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
                   <Phone className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
-                  {selectedEmpleados.phone ? selectedEmpleados.phone.toString() : 'No disponible'}
+                  {selectedCliente?.telefono || 'No disponible'}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-700 mb-1">DirecciÃ³n</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Dirección</div>
                 <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
                   <MapPin className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
-                  {selectedEmpleados.address}
+                  {selectedCliente?.dirrecion || 'No especificada'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Información Adicional */}
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 rounded-lg" style={{backgroundColor: '#8B5FBF'}}>
+                <User className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold text-gray-900">Información del Sistema</span>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-1">ID del Cliente</div>
+                <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border font-mono">
+                  {selectedCliente?._id || 'No disponible'}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Estado</div>
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    Activo
+                  </span>
                 </div>
               </div>
             </div>
@@ -338,4 +369,4 @@ const EmployeeDetailPanel = ({
   );
 };
 
-export default EmployeeDetailPanel;
+export default ClienteDetailPanel;

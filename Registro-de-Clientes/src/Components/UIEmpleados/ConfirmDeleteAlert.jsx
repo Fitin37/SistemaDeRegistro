@@ -76,7 +76,7 @@ const ConfirmDeleteAlert = ({ isOpen, onClose, onConfirm, employeeName }) => {
                 animation: isOpen ? 'fadeInUp 0.5s ease-out 0.3s both' : 'none'
               }}
             >
-              ¿Está seguro de que desea eliminar a este empleado?
+              ¿Está seguro de que desea eliminar a este cliente?
             </h3>
             <p 
               className="text-gray-600 mb-6 transition-all duration-300"
@@ -84,7 +84,7 @@ const ConfirmDeleteAlert = ({ isOpen, onClose, onConfirm, employeeName }) => {
                 animation: isOpen ? 'fadeInUp 0.5s ease-out 0.4s both' : 'none'
               }}
             >
-              El empleado se eliminará con esta acción
+              El cliente se eliminará con esta acción
             </p>
             <div 
               className="flex space-x-3"
