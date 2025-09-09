@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Lock, CreditCard, UserPlus } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Phone, MapPin, ShoppingCart, Calendar, UserPlus } from 'lucide-react';
 import axios from 'axios';
 
 // Importar componentes UI
@@ -14,45 +14,63 @@ import DatePicker from '../Components/FormsEmpleados/DatePicker';
 
 // Importar utilidades
 import { showSuccessAlert, showErrorAlert, showLoadingAlert, showValidationAlert } from '../Components/UIEmpleados/SweetAlertUtils';
-import { validateEmployeeForm, formatInput } from '../Components/UIEmpleados/FormValidation';
-import { generateEmail } from '../Components/UIEmpleados/EmailGenerator';
 
-const AgregarEmpleado = () => {
-  // Estados del formulario (sin imagen)
+const AgregarCliente = () => {
+  // Estados del formulario adaptados al backend
   const [formData, setFormData] = useState({
-    name: '',
-    lastName: '',
-    email: '',
-    dui: '',
-    birthDate: '',
-    password: '',
-    phone: '',
-    address: ''
+    nombre: '',
+    producto: '',
+    fechaPedido: '',
+    telefono: '',
+    dirrecion: ''
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Generar email automáticamente cuando cambien nombre o apellido
-  useEffect(() => {
-    const email = generateEmail(formData.name, formData.lastName);
-    setFormData(prev => ({
-      ...prev,
-      email: email
-    }));
-  }, [formData.name, formData.lastName]);
+  // Validación básica
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es requerido';
+    }
+    
+    if (!formData.producto.trim()) {
+      newErrors.producto = 'El producto es requerido';
+    }
+    
+    if (!formData.fechaPedido) {
+      newErrors.fechaPedido = 'La fecha del pedido es requerida';
+    }
+    
+    if (!formData.telefono.trim()) {
+      newErrors.telefono = 'El teléfono es requerido';
+    }
+    
+    if (!formData.dirrecion.trim()) {
+      newErrors.dirrecion = 'La dirección es requerida';
+    }
+
+    return newErrors;
+  };
 
   // Manejo de cambios en inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // No permitir editar email
-    if (name === 'email') {
-      return;
+    // Formatear teléfono
+    let formattedValue = value;
+    if (name === 'telefono') {
+      // Remover caracteres no numéricos
+      const numbers = value.replace(/\D/g, '');
+      // Formatear como 0000-0000
+      if (numbers.length >= 4) {
+        formattedValue = numbers.slice(0, 4) + '-' + numbers.slice(4, 8);
+      } else {
+        formattedValue = numbers;
+      }
     }
-
-    // Formatear inputs específicos
-    const formattedValue = formatInput(name, value);
 
     setFormData(prev => ({
       ...prev,
@@ -74,22 +92,20 @@ const AgregarEmpleado = () => {
     console.log('=== INICIO DEL SUBMIT ===');
 
     // Validar formulario
-    const formErrors = validateEmployeeForm(formData);
+    const formErrors = validateForm();
     console.log('Errores de validación:', formErrors);
     setErrors(formErrors);
 
     if (Object.keys(formErrors).length > 0) {
       console.log('Formulario tiene errores, no se envía');
-
+      
       const camposFaltantes = Object.keys(formErrors).map(field => {
         const fieldNames = {
-          name: 'Nombre',
-          lastName: 'Apellido',
-          dui: 'DUI',
-          birthDate: 'Fecha de nacimiento',
-          password: 'Contraseña',
-          phone: 'Teléfono',
-          address: 'Dirección'
+          nombre: 'Nombre',
+          producto: 'Producto',
+          fechaPedido: 'Fecha del pedido',
+          telefono: 'Teléfono',
+          dirrecion: 'Dirección'
         };
         return fieldNames[field] || field;
       });
@@ -103,24 +119,22 @@ const AgregarEmpleado = () => {
       setLoading(true);
       console.log('Estado de loading activado');
 
-      // Preparar FormData (sin imagen)
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name.trim());
-      formDataToSend.append('lastName', formData.lastName.trim());
-      formDataToSend.append('dui', formData.dui.trim());
-      formDataToSend.append('birthDate', formData.birthDate);
-      formDataToSend.append('password', formData.password);
-      formDataToSend.append('phone', formData.phone.trim());
-      formDataToSend.append('address', formData.address.trim());
+      // Preparar datos para enviar (NO FormData, JSON normal)
+      const dataToSend = {
+        nombre: formData.nombre.trim(),
+        producto: formData.producto.trim(),
+        fechaPedido: formData.fechaPedido,
+        telefono: formData.telefono.trim(),
+        dirrecion: formData.dirrecion.trim()
+      };
 
-      console.log('=== DATOS A ENVIAR ===');
-      console.log('=== ENVIANDO PETICIÓN ===');
+      console.log('=== DATOS A ENVIAR ===', dataToSend);
       console.log('URL:', 'https://sistemaderegistro2.onrender.com/api/clientes');
 
       // Enviar petición
-      const response = await axios.post('https://sistemaderegistro2.onrender.com/api/clientes', formDataToSend, {
+      const response = await axios.post('https://sistemaderegistro2.onrender.com/api/clientes', dataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
         timeout: 10000,
       });
@@ -130,21 +144,18 @@ const AgregarEmpleado = () => {
       console.log('Respuesta del servidor:', response.data);
 
       if (response.status === 200 || response.status === 201) {
-        console.log('¡Empleado creado exitosamente!');
+        console.log('¡Cliente creado exitosamente!');
 
         // Cerrar loading y mostrar éxito
         showSuccessAlert(handleBackToMenu);
 
         // Limpiar formulario
         setFormData({
-          name: '',
-          lastName: '',
-          email: '',
-          dui: '',
-          birthDate: '',
-          password: '',
-          phone: '',
-          address: ''
+          nombre: '',
+          producto: '',
+          fechaPedido: '',
+          telefono: '',
+          dirrecion: ''
         });
         setErrors({});
       }
@@ -152,10 +163,8 @@ const AgregarEmpleado = () => {
     } catch (error) {
       console.error('=== ERROR CAPTURADO ===');
       console.error('Error completo:', error);
-      console.log('Error response:', error.response);
 
       let errorMsg = 'Error desconocido';
-      let errorTitle = 'Error al agregar empleado';
 
       if (error.response) {
         const statusCode = error.response.status;
@@ -163,45 +172,27 @@ const AgregarEmpleado = () => {
 
         console.log('Status Code:', statusCode);
         console.log('Error Message:', errorMessage);
-        console.log('Full Response Data:', error.response.data);
 
         switch (statusCode) {
           case 400:
-            errorTitle = 'Error de validación';
             errorMsg = errorMessage;
             break;
           case 401:
-            errorTitle = 'No autorizado';
-            errorMsg = 'No tienes permisos para realizar esta acción. Verifica tus credenciales.';
-            break;
-          case 403:
-            errorTitle = 'Acceso denegado';
-            errorMsg = 'No tienes permisos suficientes para agregar empleados.';
+            errorMsg = 'No tienes permisos para realizar esta acción.';
             break;
           case 404:
-            errorTitle = 'Servicio no encontrado';
-            errorMsg = 'El servicio no está disponible. Contacta al administrador.';
-            break;
-          case 409:
-            errorTitle = 'Conflicto de datos';
-            errorMsg = `Ya existe un empleado con estos datos: ${errorMessage}`;
+            errorMsg = 'El servicio no está disponible.';
             break;
           case 500:
-            errorTitle = 'Error del servidor';
             errorMsg = 'Error interno del servidor. Inténtalo más tarde.';
             break;
           default:
-            errorTitle = 'Error inesperado';
             errorMsg = `Error del servidor (${statusCode}): ${errorMessage}`;
         }
       } else if (error.request) {
-        console.error('No hubo respuesta del servidor');
-        errorTitle = 'Sin conexión';
         errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
       } else {
-        console.error('Error en la configuración:', error.message);
-        errorTitle = 'Error de configuración';
-        errorMsg = 'Error al configurar la petición. Contacta al administrador.';
+        errorMsg = 'Error al configurar la petición.';
       }
 
       showErrorAlert(errorMsg);
@@ -232,14 +223,14 @@ const AgregarEmpleado = () => {
       </div>
 
       {/* Contenido con scroll */}
-      <div className="flex-1 overflow-y-auto agregar-empleado-scroll">
+      <div className="flex-1 overflow-y-auto agregar-cliente-scroll">
         <div className="min-h-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="max-w-7xl mx-auto">
             {/* Hero Section */}
             <HeroSection 
               icon={UserPlus}
-              title="Agregar Nuevo cliente"
-              subtitle="Complete la información del cliente para agregarlo al sistema"
+              title="Registrar Nuevo Pedido"
+              subtitle="Complete la información del cliente y su pedido para registrarlo en el sistema"
             />
 
             {/* Form Container */}
@@ -249,86 +240,69 @@ const AgregarEmpleado = () => {
                 {/* Form Fields Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   
-                  {/* Nombre */}
+                  {/* Nombre del Cliente */}
                   <FormInput
-                    id="name"
-                    name="name"
-                    value={formData.name}
+                    id="nombre"
+                    name="nombre"
+                    value={formData.nombre}
                     onChange={handleInputChange}
-                    placeholder="Ingrese el nombre"
+                    placeholder="Ingrese el nombre del cliente"
                     icon={User}
-                    label="Nombre"
+                    label="Nombre del Cliente"
                     required
-                    error={errors.name}
+                    error={errors.nombre}
                   />
 
-                  {/* Apellido */}
+                  {/* Producto */}
                   <FormInput
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
+                    id="producto"
+                    name="producto"
+                    value={formData.producto}
                     onChange={handleInputChange}
-                    placeholder="Ingrese el apellido"
-                    icon={User}
-                    label="Apellido"
+                    placeholder="Ingrese el producto solicitado"
+                    icon={ShoppingCart}
+                    label="Producto"
                     required
-                    error={errors.lastName}
+                    error={errors.producto}
                   />
 
-                  {/* DUI */}
-                  
-
-                  {/* Fecha de Nacimiento */}
+                  {/* Fecha del Pedido */}
                   <DatePicker
-                    id="birthDate"
-                    name="birthDate"
-                    value={formData.birthDate}
+                    id="fechaPedido"
+                    name="fechaPedido"
+                    value={formData.fechaPedido}
                     onChange={handleInputChange}
-                    label="Fecha del pedido"
+                    label="Fecha del Pedido"
                     required
-                    error={errors.birthDate}
-                  />
-
-                  {/* Contraseña */}
-                  <FormInput
-                    id="password"
-                    name="password"
-                    type="text"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Ingrese la descripcion del producto"
-                    icon={Lock}
-                    label="Descripcion del producto"
-                    required
-                    error={errors.password}
+                    error={errors.fechaPedido}
                   />
 
                   {/* Teléfono */}
                   <FormInput
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
+                    id="telefono"
+                    name="telefono"
+                    value={formData.telefono}
                     onChange={handleInputChange}
                     placeholder="0000-0000"
                     maxLength={9}
                     icon={Phone}
-                    label="Teléfono"
+                    label="Teléfono de Contacto"
                     required
-                    error={errors.phone}
+                    error={errors.telefono}
                   />
 
-                  {/* Dirección - Ocupa 3 columnas completas */}
-                  <div className="sm:col-span-2 lg:col-span-3">
+                  {/* Dirección - Ocupa las columnas restantes */}
+                  <div className="sm:col-span-2 lg:col-span-2">
                     <FormTextarea
-                      id="address"
-                      name="address"
-                      value={formData.address}
+                      id="dirrecion"
+                      name="dirrecion"
+                      value={formData.dirrecion}
                       onChange={handleInputChange}
-                      placeholder="Ingrese la dirección completa"
+                      placeholder="Ingrese la dirección completa de entrega"
                       icon={MapPin}
-                      label="Dirección"
+                      label="Dirección de Entrega"
                       required
-                      error={errors.address}
+                      error={errors.dirrecion}
                       rows={3}
                     />
                   </div>
@@ -340,7 +314,7 @@ const AgregarEmpleado = () => {
                     loading={loading}
                     onClick={handleSubmit}
                     icon={UserPlus}
-                    text="Agregar cliente"
+                    text="Registrar Pedido"
                     loadingText="Procesando..."
                   />
                 </div>
@@ -354,38 +328,38 @@ const AgregarEmpleado = () => {
       <style dangerouslySetInnerHTML={{
         __html: `
           /* Scroll personalizado para el contenido */
-          .agregar-empleado-scroll {
+          .agregar-cliente-scroll {
             scrollbar-width: thin;
             scrollbar-color: #64748b #e2e8f0;
           }
           
-          .agregar-empleado-scroll::-webkit-scrollbar {
+          .agregar-cliente-scroll::-webkit-scrollbar {
             width: 12px;
           }
           
-          .agregar-empleado-scroll::-webkit-scrollbar-track {
+          .agregar-cliente-scroll::-webkit-scrollbar-track {
             background: #e2e8f0;
             border-radius: 6px;
           }
           
-          .agregar-empleado-scroll::-webkit-scrollbar-thumb {
+          .agregar-cliente-scroll::-webkit-scrollbar-thumb {
             background: #64748b;
             border-radius: 6px;
             border: 2px solid #e2e8f0;
             transition: background 0.2s ease;
           }
           
-          .agregar-empleado-scroll::-webkit-scrollbar-thumb:hover {
+          .agregar-cliente-scroll::-webkit-scrollbar-thumb:hover {
             background: #475569;
           }
 
           /* Optimizaciones para móviles */
           @media (max-width: 640px) {
-            .agregar-empleado-scroll {
+            .agregar-cliente-scroll {
               -webkit-overflow-scrolling: touch;
             }
             
-            .agregar-empleado-scroll::-webkit-scrollbar {
+            .agregar-cliente-scroll::-webkit-scrollbar {
               width: 8px;
             }
           }
@@ -398,7 +372,7 @@ const AgregarEmpleado = () => {
           }
 
           /* Animación suave para el scroll */
-          .agregar-empleado-scroll {
+          .agregar-cliente-scroll {
             scroll-behavior: smooth;
           }
 
@@ -417,17 +391,17 @@ const AgregarEmpleado = () => {
 
           /* Mejoras de accesibilidad */
           @media (prefers-reduced-motion: reduce) {
-            .agregar-empleado-scroll {
+            .agregar-cliente-scroll {
               scroll-behavior: auto;
             }
             
-            .agregar-empleado-scroll::-webkit-scrollbar-thumb {
+            .agregar-cliente-scroll::-webkit-scrollbar-thumb {
               transition: none;
             }
           }
 
           /* Focus mejorado para navegación por teclado */
-          .agregar-empleado-scroll:focus-within {
+          .agregar-cliente-scroll:focus-within {
             outline: 2px solid #3b82f6;
             outline-offset: 2px;
           }
@@ -437,4 +411,4 @@ const AgregarEmpleado = () => {
   );
 };
 
-export default AgregarEmpleado;
+export default AgregarCliente;
