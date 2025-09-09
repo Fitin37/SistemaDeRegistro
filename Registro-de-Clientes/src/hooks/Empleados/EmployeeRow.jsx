@@ -1,71 +1,65 @@
 import React from 'react';
-import { User, Mail, IdCard, Calendar, Phone, MapPin } from 'lucide-react';
+import { User, Package, Phone, MapPin, Calendar } from 'lucide-react';
 
-const EmployeeRow = ({ 
-  empleado, 
-  showDetailView, 
-  selectedEmpleados, 
-  selectEmpleado 
+const ClienteRow = ({
+  empleado: cliente, // Mantenemos el nombre empleado para compatibilidad
+  showDetailView,
+  selectedEmpleados: selectedCliente,
+  selectEmpleado: selectCliente
 }) => {
   return (
     <div
-      className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
-        selectedEmpleados && selectedEmpleados._id === empleado._id 
-          ? 'shadow-lg transform scale-[1.02]' 
+      className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-5'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
+        selectedCliente && selectedCliente._id === cliente._id
+          ? 'shadow-lg transform scale-[1.02]'
           : 'hover:shadow-md hover:transform hover:scale-[1.01] border-transparent'
       }`}
       style={{
-        backgroundColor: selectedEmpleados && selectedEmpleados._id === empleado._id ? '#5D9646' : '#ffffff',
-        color: selectedEmpleados && selectedEmpleados._id === empleado._id ? '#ffffff' : '#374151',
-        borderColor: selectedEmpleados && selectedEmpleados._id === empleado._id ? '#5D9646' : 'transparent'
+        backgroundColor: selectedCliente && selectedCliente._id === cliente._id ? '#5D9646' : '#ffffff',
+        color: selectedCliente && selectedCliente._id === cliente._id ? '#ffffff' : '#374151',
+        borderColor: selectedCliente && selectedCliente._id === cliente._id ? '#5D9646' : 'transparent'
       }}
-      onClick={() => selectEmpleado(empleado)}
+      onClick={() => selectCliente(cliente)}
     >
+      {/* Nombre del Cliente */}
       <div className="font-semibold flex items-center">
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 overflow-hidden ${
-          selectedEmpleados && selectedEmpleados._id === empleado._id ? 'bg-white bg-opacity-20' : ''
-        }`} style={{backgroundColor: selectedEmpleados && selectedEmpleados._id === empleado._id ? 'rgba(255,255,255,0.2)' : '#5F8EAD'}}>
-          {empleado.img ? (
-            <img 
-              src={empleado.img} 
-              alt={`${empleado.name} ${empleado.lastName}`}
-              className="w-full h-full object-cover rounded-lg"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : null}
-          <User className={`w-5 h-5 ${empleado.img ? 'hidden' : 'block'} ${selectedEmpleados && selectedEmpleados._id === empleado._id ? 'text-white' : 'text-white'}`} />
+          selectedCliente && selectedCliente._id === cliente._id ? 'bg-white bg-opacity-20' : ''
+        }`} style={{backgroundColor: selectedCliente && selectedCliente._id === cliente._id ? 'rgba(255,255,255,0.2)' : '#5F8EAD'}}>
+          <User className={`w-5 h-5 ${selectedCliente && selectedCliente._id === cliente._id ? 'text-white' : 'text-white'}`} />
         </div>
-        <span className="truncate">{empleado.name} {empleado.lastName}</span>
+        <span className="truncate">{cliente.nombre || 'Sin nombre'}</span>
       </div>
+
+      {/* Producto */}
       <div className="flex items-center truncate">
-        <Mail className={`w-4 h-4 mr-2 ${selectedEmpleados && selectedEmpleados._id === empleado._id ? 'text-white' : 'text-gray-400'}`} />
-        <span className="truncate">{empleado.email}</span>
+        <Package className={`w-4 h-4 mr-2 ${selectedCliente && selectedCliente._id === cliente._id ? 'text-white' : 'text-gray-400'}`} />
+        <span className="truncate">{cliente.producto || 'Sin producto'}</span>
       </div>
+
+      {/* Teléfono */}
       <div className="flex items-center truncate">
-        <IdCard className={`w-4 h-4 mr-2 ${selectedEmpleados && selectedEmpleados._id === empleado._id ? 'text-white' : 'text-gray-400'}`} />
-        <span className="truncate">{empleado.dui}</span>
+        <Phone className={`w-4 h-4 mr-2 ${selectedCliente && selectedCliente._id === cliente._id ? 'text-white' : 'text-gray-400'}`} />
+        <span className="truncate">{cliente.telefono || 'No disponible'}</span>
       </div>
+
+      {/* Fecha de Pedido */}
       <div className="flex items-center truncate">
-        <Calendar className={`w-4 h-4 mr-2 ${selectedEmpleados && selectedEmpleados._id === empleado._id ? 'text-white' : 'text-gray-400'}`} />
-        <span className="truncate">{new Date(empleado.birthDate).toLocaleDateString()}</span>
+        <Calendar className={`w-4 h-4 mr-2 ${selectedCliente && selectedCliente._id === cliente._id ? 'text-white' : 'text-gray-400'}`} />
+        <span className="truncate">
+          {cliente.fechaPedido ? new Date(cliente.fechaPedido).toLocaleDateString() : 'Sin fecha'}
+        </span>
       </div>
+
+      {/* Dirección (solo si no está en vista detalle) */}
       {!showDetailView && (
-        <>
-          <div className="flex items-center truncate">
-            <Phone className={`w-4 h-4 mr-2 ${selectedEmpleados && selectedEmpleados._id === empleado._id ? 'text-white' : 'text-gray-400'}`} />
-            <span className="truncate">{empleado.phone ? empleado.phone.toString() : 'No disponible'}</span>
-          </div>
-          <div className="flex items-center truncate">
-            <MapPin className={`w-4 h-4 mr-2 ${selectedEmpleados && selectedEmpleados._id === empleado._id ? 'text-white' : 'text-gray-400'}`} />
-            <span className="truncate">{empleado.address}</span>
-          </div>
-        </>
+        <div className="flex items-center truncate">
+          <MapPin className={`w-4 h-4 mr-2 ${selectedCliente && selectedCliente._id === cliente._id ? 'text-white' : 'text-gray-400'}`} />
+          <span className="truncate">{cliente.dirrecion || 'Sin dirección'}</span>
+        </div>
       )}
     </div>
   );
 };
 
-export default EmployeeRow;
+export default ClienteRow;
