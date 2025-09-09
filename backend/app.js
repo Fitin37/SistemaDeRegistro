@@ -3,17 +3,16 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import clientesRouter from "./src/routes/clientesRoutes.js"
 
-
 const app = express();
-app.use(express.json());
-app.use(cookieParser());
+
+// CORS PRIMERO - antes que otros middlewares
 app.use(cors({
   origin: [
-    "https://sistema-de-registro-kappa.vercel.app/"
+    "https://sistema-de-registro-kappa.vercel.app"
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-   allowedHeaders: [
+  allowedHeaders: [
     "Content-Type",
     "Authorization", 
     "Accept",
@@ -25,9 +24,14 @@ app.use(cors({
   ]
 }));
 
+// DESPUÉS los demás middlewares
+app.use(express.json());
+app.use(cookieParser());
+
 app.get("/test", (req, res) => {
   res.json({ message: "Test with cookieParser" });
 });
+
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -35,6 +39,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/api/clientes",clientesRouter);
+app.use("/api/clientes", clientesRouter);
 
 export default app;
