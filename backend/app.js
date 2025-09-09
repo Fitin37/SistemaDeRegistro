@@ -7,21 +7,8 @@ const app = express();
 
 // CORS PRIMERO - antes que otros middlewares
 app.use(cors({
-  origin: [
-    "https://sistema-de-registro-kappa.vercel.app"
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization", 
-    "Accept",
-    "Origin",
-    "Cache-Control",
-    "cache-control", 
-    "Pragma",
-    "pragma"
-  ]
+  origin: "https://sistema-de-registro-kappa.vercel.app",
+  credentials: true
 }));
 
 // DESPUÉS los demás middlewares
