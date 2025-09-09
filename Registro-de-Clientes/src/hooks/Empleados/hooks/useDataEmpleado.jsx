@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 
-const useDataEmpleado = () => {
+const useDataCliente = () => {
   // Estados principales
-  const [empleados, setEmpleados] = useState([]);
-  const [selectedEmpleados, setSelectedEmpleados] = useState(null);
+  const [clientes, setClientes] = useState([]);
+  const [selectedCliente, setSelectedCliente] = useState(null);
   const [showDetailView, setShowDetailView] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,13 +24,13 @@ const useDataEmpleado = () => {
   
   const navigate = useNavigate();
 
-  // Función para cargar empleados (CORREGIDA)
-  const fetchEmpleados = async () => {
+  // Función para cargar clientes (CORREGIDA PARA EL FORMATO CORRECTO)
+  const fetchClientes = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🚀 Iniciando petición a la API de empleados...');
+      console.log('🚀 Iniciando petición a la API de clientes...');
       
       const response = await axios.get('https://sistemaderegistro2.onrender.com/api/clientes');
       
@@ -40,24 +40,24 @@ const useDataEmpleado = () => {
       
       const responseData = response.data;
       
-      // Manejar diferentes estructuras de respuesta
-      let empleadosArray = [];
+      // Manejar el formato específico de tu backend
+      let clientesArray = [];
       
       if (Array.isArray(responseData)) {
         // Si la respuesta es directamente un array
-        empleadosArray = responseData;
+        clientesArray = responseData;
         console.log('✅ Datos son un array directo');
-      } else if (responseData && responseData.data && Array.isArray(responseData.data.empleados)) {
-        // Tu API devuelve: { data: { empleados: [...] } }
-        empleadosArray = responseData.data.empleados;
-        console.log('✅ Datos encontrados en data.empleados');
-      } else if (responseData && Array.isArray(responseData.empleados)) {
-        // Si está directamente en empleados
-        empleadosArray = responseData.empleados;
-        console.log('✅ Datos encontrados en empleados');
+      } else if (responseData && responseData.data && Array.isArray(responseData.data.clientes)) {
+        // Tu API devuelve: { success: true, data: { clientes: [...] } }
+        clientesArray = responseData.data.clientes;
+        console.log('✅ Datos encontrados en data.clientes');
+      } else if (responseData && Array.isArray(responseData.clientes)) {
+        // Si está directamente en clientes
+        clientesArray = responseData.clientes;
+        console.log('✅ Datos encontrados en clientes');
       } else if (responseData && Array.isArray(responseData.data)) {
         // Si está en data como array
-        empleadosArray = responseData.data;
+        clientesArray = responseData.data;
         console.log('✅ Datos encontrados en data');
       } else {
         console.warn('⚠️ Formato de datos no esperado:', responseData);
@@ -65,35 +65,32 @@ const useDataEmpleado = () => {
         throw new Error('Formato de datos no válido');
       }
 
-      console.log(`📊 Cantidad de empleados encontrados: ${empleadosArray.length}`);
+      console.log(`📊 Cantidad de clientes encontrados: ${clientesArray.length}`);
       
-      if (empleadosArray.length === 0) {
-        console.log('⚠️ No se encontraron empleados en la respuesta');
+      if (clientesArray.length === 0) {
+        console.log('⚠️ No se encontraron clientes en la respuesta');
       } else {
-        console.log('📋 Primeros empleados:', empleadosArray.slice(0, 2));
+        console.log('📋 Primeros clientes:', clientesArray.slice(0, 2));
       }
 
-      // Normalizar los datos de empleados
-      const normalizedEmpleados = empleadosArray.map((empleado, index) => {
-        console.log(`🔄 Normalizando empleado ${index + 1}:`, empleado);
+      // Normalizar los datos de clientes (adaptado a tu schema)
+      const normalizedClientes = clientesArray.map((cliente, index) => {
+        console.log(`🔄 Normalizando cliente ${index + 1}:`, cliente);
         
         return {
-          ...empleado,
-          // Asegurar que todos los campos existan
-          name: empleado.name || '',
-          lastName: empleado.lastName || '',
-          email: empleado.email || '',
-          dui: empleado.dui || '',
-          birthDate: empleado.birthDate || null,
-          phone: empleado.phone || '',
-          address: empleado.address || '',
-          img: empleado.img || null,
-          _id: empleado._id || empleado.id || `temp-${index}`
+          ...cliente,
+          // Asegurar que todos los campos existan según tu schema
+          nombre: cliente.nombre || '',
+          producto: cliente.producto || '',
+          telefono: cliente.telefono || '',
+          dirrecion: cliente.dirrecion || '',
+          fechaPedido: cliente.fechaPedido || null,
+          _id: cliente._id || cliente.id || `temp-${index}`
         };
       });
 
-      console.log("✅ Empleados normalizados:", normalizedEmpleados);
-      setEmpleados(normalizedEmpleados);
+      console.log("✅ Clientes normalizados:", normalizedClientes);
+      setClientes(normalizedClientes);
       setError(null);
       
     } catch (error) {
@@ -103,27 +100,27 @@ const useDataEmpleado = () => {
       
       // Verificar si es un error de red
       if (error.message.includes('Network') || error.code === 'ERR_NETWORK') {
-        setError('No se puede conectar al servidor. Verifica que esté ejecutándose en https://sistemaderegistro.onrender.com');
+        setError('No se puede conectar al servidor. Verifica que esté ejecutándose en https://sistemaderegistro2.onrender.com');
       } else if (error.response) {
         setError(`Error del servidor: ${error.response.status} - ${error.response.data?.message || 'Error desconocido'}`);
       } else {
-        setError(`Error al cargar empleados: ${error.message}`);
+        setError(`Error al cargar clientes: ${error.message}`);
       }
-      setEmpleados([]); // Asegurar que siempre sea un array
+      setClientes([]); // Asegurar que siempre sea un array
     } finally {
       setLoading(false);
-      console.log('🏁 Carga de empleados finalizada');
+      console.log('🏁 Carga de clientes finalizada');
     }
   };
 
-  // Cargar empleados al iniciar
+  // Cargar clientes al iniciar
   useEffect(() => {
-    fetchEmpleados();
+    fetchClientes();
   }, []);
 
-  // Filtrar empleados - WITH SAFETY CHECK
-  const filterEmpleados = Array.isArray(empleados) ? empleados.filter((empleado) => 
-    [empleado.name, empleado.lastName, empleado.dui, empleado.email]
+  // Filtrar clientes - adaptado a los campos correctos
+  const filterClientes = Array.isArray(clientes) ? clientes.filter((cliente) => 
+    [cliente.nombre, cliente.producto, cliente.telefono, cliente.dirrecion]
     .join(' ')
     .toLowerCase()
     .includes(searchTerm.toLowerCase())
@@ -151,28 +148,28 @@ const useDataEmpleado = () => {
     setShowConfirmDelete(true);
   };
 
-  // Eliminar empleado
+  // Eliminar cliente
   const confirmDelete = async () => {
     setShowConfirmDelete(false);
     try {
-      console.log(`🗑️ Eliminando empleado ${selectedEmpleados._id}`);
-      await axios.delete(`https://sistemaderegistro2.onrender.com/api/clientes/${selectedEmpleados._id}`);
+      console.log(`🗑️ Eliminando cliente ${selectedCliente._id}`);
+      await axios.delete(`https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`);
       
-      // Asegurar que empleados es un array antes de filtrar
-      setEmpleados(prevEmpleados => 
-        Array.isArray(prevEmpleados) 
-          ? prevEmpleados.filter(emp => emp._id !== selectedEmpleados._id)
+      // Asegurar que clientes es un array antes de filtrar
+      setClientes(prevClientes => 
+        Array.isArray(prevClientes) 
+          ? prevClientes.filter(cliente => cliente._id !== selectedCliente._id)
           : []
       );
       
-      console.log("✅ Empleado eliminado:", selectedEmpleados);
+      console.log("✅ Cliente eliminado:", selectedCliente);
       setShowDetailView(false);
-      setSelectedEmpleados(null);
+      setSelectedCliente(null);
       setSuccessType('delete');
       setShowSuccessAlert(true);
     } catch (error) {
-      console.error("❌ Error al eliminar empleado:", error);
-      setError("Error al eliminar el empleado");
+      console.error("❌ Error al eliminar cliente:", error);
+      setError("Error al eliminar el cliente");
     }
   };
 
@@ -180,50 +177,37 @@ const useDataEmpleado = () => {
     setShowConfirmDelete(false);
   };
 
-  // FUNCIÓN HANDLESAVEEDIT MEJORADA PARA ACTUALIZACIÓN INSTANTÁNEA
+  // FUNCIÓN HANDLESAVEEDIT ADAPTADA PARA CLIENTES
   const handleSaveEdit = async (formData) => {
-    // VALIDACIÓN CRÍTICA - Verificar empleado seleccionado
-    if (!selectedEmpleados) {
-      console.error('❌ No hay empleado seleccionado');
-      setError('No hay empleado seleccionado para actualizar');
+    // VALIDACIÓN CRÍTICA - Verificar cliente seleccionado
+    if (!selectedCliente) {
+      console.error('❌ No hay cliente seleccionado');
+      setError('No hay cliente seleccionado para actualizar');
       return;
     }
     
-    if (!selectedEmpleados._id) {
-      console.error('❌ El empleado seleccionado no tiene ID:', selectedEmpleados);
-      setError('El empleado seleccionado no tiene un ID válido');
+    if (!selectedCliente._id) {
+      console.error('❌ El cliente seleccionado no tiene ID:', selectedCliente);
+      setError('El cliente seleccionado no tiene un ID válido');
       return;
     }
     
-    console.log('🎯 Empleado ANTES de actualizar:', selectedEmpleados);
-    
-    // Verificar que el FormData no esté vacío
-    let hasData = false;
-    for (let pair of formData.entries()) {
-      hasData = true;
-      break;
-    }
-    
-    if (!hasData) {
-      console.error('❌ No hay datos para actualizar');
-      setError('No hay cambios para guardar');
-      return;
-    }
+    console.log('🎯 Cliente ANTES de actualizar:', selectedCliente);
     
     // Activar estado de carga
     setUploading(true);
     
     try {
       // Log detallado de lo que se está enviando
-      console.log('📤 Enviando actualización a:', `https://sistemaderegistro2.onrender.com/api/clientes/${selectedEmpleados._id}`);
+      console.log('📤 Enviando actualización a:', `https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`);
 
       // Realizar la actualización
       const response = await axios.put(
-        `https://sistemaderegistro2.onrender.com/api/clientes/${selectedEmpleados._id}`, 
+        `https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`, 
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -231,41 +215,37 @@ const useDataEmpleado = () => {
       console.log("✅ Respuesta COMPLETA del servidor:", response.data);
       
       // Extraer datos del servidor
-      const updatedEmployeeFromServer = response.data.empleado || response.data.data || response.data;
+      const updatedClienteFromServer = response.data.cliente || response.data.data || response.data;
       
       // 🎯 CRÍTICO: Combinar datos del servidor con datos existentes para preservar campos
-      const fullyUpdatedEmployee = {
+      const fullyUpdatedCliente = {
         // Empezar con los datos originales para preservar TODO
-        ...selectedEmpleados,
+        ...selectedCliente,
         // Sobrescribir SOLO con los datos que vienen del servidor
-        ...updatedEmployeeFromServer,
+        ...updatedClienteFromServer,
         // Asegurar que estos campos críticos NO se pierdan
-        _id: selectedEmpleados._id,
-        dui: selectedEmpleados.dui || updatedEmployeeFromServer.dui,
-        birthDate: selectedEmpleados.birthDate || updatedEmployeeFromServer.birthDate,
-        // Si el servidor no devuelve ciertos campos, mantener los originales
-        email: updatedEmployeeFromServer.email || selectedEmpleados.email,
-        name: updatedEmployeeFromServer.name || selectedEmpleados.name,
-        lastName: updatedEmployeeFromServer.lastName || selectedEmpleados.lastName,
-        phone: updatedEmployeeFromServer.phone || selectedEmpleados.phone,
-        address: updatedEmployeeFromServer.address || selectedEmpleados.address,
-        img: updatedEmployeeFromServer.img || selectedEmpleados.img
+        _id: selectedCliente._id,
+        nombre: updatedClienteFromServer.nombre || selectedCliente.nombre,
+        producto: updatedClienteFromServer.producto || selectedCliente.producto,
+        telefono: updatedClienteFromServer.telefono || selectedCliente.telefono,
+        dirrecion: updatedClienteFromServer.dirrecion || selectedCliente.dirrecion,
+        fechaPedido: updatedClienteFromServer.fechaPedido || selectedCliente.fechaPedido
       };
       
-      console.log("✅ Empleado COMBINADO final:", fullyUpdatedEmployee);
+      console.log("✅ Cliente COMBINADO final:", fullyUpdatedCliente);
       
-      // 🚀 ACTUALIZACIÓN INMEDIATA - Primero actualizar selectedEmpleados
-      setSelectedEmpleados(fullyUpdatedEmployee);
+      // 🚀 ACTUALIZACIÓN INMEDIATA - Primero actualizar selectedCliente
+      setSelectedCliente(fullyUpdatedCliente);
       
-      // Después actualizar la lista de empleados
-      setEmpleados(prevEmpleados => 
-        Array.isArray(prevEmpleados)
-          ? prevEmpleados.map(emp => 
-              emp._id === selectedEmpleados._id 
-                ? fullyUpdatedEmployee
-                : emp
+      // Después actualizar la lista de clientes
+      setClientes(prevClientes => 
+        Array.isArray(prevClientes)
+          ? prevClientes.map(cliente => 
+              cliente._id === selectedCliente._id 
+                ? fullyUpdatedCliente
+                : cliente
             )
-          : [fullyUpdatedEmployee]
+          : [fullyUpdatedCliente]
       );
       
       console.log("✅ ACTUALIZACIÓN INSTANTÁNEA COMPLETADA");
@@ -276,11 +256,11 @@ const useDataEmpleado = () => {
       setShowSuccessAlert(true);
       
     } catch (error) {
-      console.error("❌ Error completo al actualizar empleado:", error);
+      console.error("❌ Error completo al actualizar cliente:", error);
       console.error("❌ Response data:", error.response?.data);
       console.error("❌ Response status:", error.response?.status);
       
-      let errorMessage = 'Error al actualizar el empleado';
+      let errorMessage = 'Error al actualizar el cliente';
       
       if (error.response) {
         errorMessage = `Error ${error.response.status}: ${error.response.data?.message || 'Error del servidor'}`;
@@ -310,40 +290,40 @@ const useDataEmpleado = () => {
     setShowEditAlert(false);
   };
 
-  // Seleccionar empleado - CON VALIDACIÓN
-  const selectEmpleado = (empleado) => {
-    console.log('👤 Empleado seleccionado:', empleado);
-    console.log('👤 ID del empleado:', empleado?._id);
+  // Seleccionar cliente - CON VALIDACIÓN
+  const selectCliente = (cliente) => {
+    console.log('👤 Cliente seleccionado:', cliente);
+    console.log('👤 ID del cliente:', cliente?._id);
     
-    if (!empleado || !empleado._id) {
-      console.error('❌ Empleado inválido seleccionado');
-      setError('Empleado inválido seleccionado');
+    if (!cliente || !cliente._id) {
+      console.error('❌ Cliente inválido seleccionado');
+      setError('Cliente inválido seleccionado');
       return;
     }
     
-    setSelectedEmpleados(empleado);
+    setSelectedCliente(cliente);
     setShowDetailView(true);
   };
 
   // Cerrar vista detalle
   const closeDetailView = () => {
     setShowDetailView(false);
-    setSelectedEmpleados(null);
+    setSelectedCliente(null);
   };
 
-  // Refrescar datos (usa la función fetchEmpleados)
-  const refreshEmpleados = async () => {
-    console.log('🔄 Refrescando lista de empleados...');
-    await fetchEmpleados();
+  // Refrescar datos (usa la función fetchClientes)
+  const refreshClientes = async () => {
+    console.log('🔄 Refrescando lista de clientes...');
+    await fetchClientes();
   };
 
   // Función para obtener estadísticas
   const getStats = () => {
-    const empleadosArray = Array.isArray(empleados) ? empleados : [];
-    const filteredArray = Array.isArray(filterEmpleados) ? filterEmpleados : [];
+    const clientesArray = Array.isArray(clientes) ? clientes : [];
+    const filteredArray = Array.isArray(filterClientes) ? filterClientes : [];
     
     return {
-      total: empleadosArray.length,
+      total: clientesArray.length,
       filtered: filteredArray.length,
       hasResults: filteredArray.length > 0
     };
@@ -352,29 +332,29 @@ const useDataEmpleado = () => {
   // Efecto para debugging en desarrollo
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Estado actual de empleados:', {
-        count: empleados.length,
+      console.log('📊 Estado actual de clientes:', {
+        count: clientes.length,
         loading,
         error,
-        hasData: empleados.length > 0,
-        empleados: empleados.slice(0, 2) // Solo mostrar los primeros 2
+        hasData: clientes.length > 0,
+        clientes: clientes.slice(0, 2) // Solo mostrar los primeros 2
       });
     }
-  }, [empleados, loading, error]);
+  }, [clientes, loading, error]);
 
-  // Efecto para monitorear selectedEmpleados
+  // Efecto para monitorear selectedCliente
   useEffect(() => {
-    console.log('🔍 Estado de selectedEmpleados cambió:', {
-      empleado: selectedEmpleados,
-      tieneId: selectedEmpleados?._id,
-      id: selectedEmpleados?._id
+    console.log('🔍 Estado de selectedCliente cambió:', {
+      cliente: selectedCliente,
+      tieneId: selectedCliente?._id,
+      id: selectedCliente?._id
     });
-  }, [selectedEmpleados]);
+  }, [selectedCliente]);
 
   return {
-    // Estados
-    empleados,
-    selectedEmpleados,
+    // Estados (adaptados para clientes)
+    empleados: clientes,          // Mantengo este nombre para compatibilidad
+    selectedEmpleados: selectedCliente,
     showDetailView,
     loading,
     error,
@@ -385,8 +365,8 @@ const useDataEmpleado = () => {
     showSuccessAlert,
     showEditAlert,
     successType,
-    filterEmpleados,
-    uploading, // Estado para el botón de actualizar
+    filterEmpleados: filterClientes,  // Mantengo este nombre para compatibilidad
+    uploading,
 
     // Setters
     setSearchTerm,
@@ -394,7 +374,7 @@ const useDataEmpleado = () => {
     setError,
     setUploading,
 
-    // Funciones
+    // Funciones (mantengo nombres para compatibilidad)
     handleContinue,
     handleOptionsClick,
     handleEdit,
@@ -405,14 +385,14 @@ const useDataEmpleado = () => {
     closeAlert,
     closeSuccessAlert,
     closeEditAlert,
-    selectEmpleado,
+    selectEmpleado: selectCliente,
     closeDetailView,
-    refreshEmpleados,
-    fetchEmpleados, // Exportar para usar en otros lugares si necesitas
+    refreshEmpleados: refreshClientes,
+    fetchEmpleados: fetchClientes,
     
     // Utilidades
     stats: getStats()
   };
 };
 
-export default useDataEmpleado;
+export default useDataCliente;
