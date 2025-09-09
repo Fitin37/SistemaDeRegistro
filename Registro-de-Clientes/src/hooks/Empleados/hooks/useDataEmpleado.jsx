@@ -178,104 +178,139 @@ const useDataCliente = () => {
   };
 
   // FUNCIÓN HANDLESAVEEDIT ADAPTADA PARA CLIENTES
-  const handleSaveEdit = async (formData) => {
-    // VALIDACIÓN CRÍTICA - Verificar cliente seleccionado
-    if (!selectedCliente) {
-      console.error('❌ No hay cliente seleccionado');
-      setError('No hay cliente seleccionado para actualizar');
-      return;
-    }
-    
-    if (!selectedCliente._id) {
-      console.error('❌ El cliente seleccionado no tiene ID:', selectedCliente);
-      setError('El cliente seleccionado no tiene un ID válido');
-      return;
-    }
-    
-    console.log('🎯 Cliente ANTES de actualizar:', selectedCliente);
-    
-    // Activar estado de carga
-    setUploading(true);
-    
-    try {
-      // Log detallado de lo que se está enviando
-      console.log('📤 Enviando actualización a:', `https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`);
+  const handleSaveEdit = async (dataToUpdate) => {
+  // VALIDACIÓN CRÍTICA
+  if (!selectedCliente) {
+    console.error('❌ No hay cliente seleccionado');
+    setError('No hay cliente seleccionado para actualizar');
+    return;
+  }
+  
+  if (!selectedCliente._id) {
+    console.error('❌ El cliente seleccionado no tiene ID:', selectedCliente);
+    setError('El cliente seleccionado no tiene un ID válido');
+    return;
+  }
+  
+  console.log('🎯 Cliente ANTES de actualizar:', selectedCliente);
+  console.log('📝 Datos a actualizar:', dataToUpdate);
+  
+  // 🚀 ACTUALIZACIÓN OPTIMISTA INMEDIATA (antes de la llamada al servidor)
+  const updatedClienteOptimistic = {
+    ...selectedCliente,
+    ...dataToUpdate,  // Aplicar cambios inmediatamente
+    _id: selectedCliente._id  // Preservar ID
+  };
+  
+  console.log('⚡ Aplicando actualización optimista:', updatedClienteOptimistic);
+  
+  // ACTUALIZAR UI INMEDIATAMENTE
+  setSelectedCliente(updatedClienteOptimistic);
+  setClientes(prevClientes => 
+    Array.isArray(prevClientes)
+      ? prevClientes.map(cliente => 
+          cliente._id === selectedCliente._id 
+            ? updatedClienteOptimistic
+            : cliente
+        )
+      : [updatedClienteOptimistic]
+  );
+  
+  // Cerrar modal inmediatamente para mejor UX
+  setShowEditAlert(false);
+  
+  // Mostrar indicador de guardado
+  setUploading(true);
+  
+  try {
+    console.log('📤 Enviando a servidor:', `https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`);
 
-      // Realizar la actualización
-      const response = await axios.put(
-        `https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`, 
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      
-      console.log("✅ Respuesta COMPLETA del servidor:", response.data);
-      
-      // Extraer datos del servidor
-      const updatedClienteFromServer = response.data.cliente || response.data.data || response.data;
-      
-      // 🎯 CRÍTICO: Combinar datos del servidor con datos existentes para preservar campos
-      const fullyUpdatedCliente = {
-        // Empezar con los datos originales para preservar TODO
-        ...selectedCliente,
-        // Sobrescribir SOLO con los datos que vienen del servidor
-        ...updatedClienteFromServer,
-        // Asegurar que estos campos críticos NO se pierdan
-        _id: selectedCliente._id,
-        nombre: updatedClienteFromServer.nombre || selectedCliente.nombre,
-        producto: updatedClienteFromServer.producto || selectedCliente.producto,
-        telefono: updatedClienteFromServer.telefono || selectedCliente.telefono,
-        dirrecion: updatedClienteFromServer.dirrecion || selectedCliente.dirrecion,
-        fechaPedido: updatedClienteFromServer.fechaPedido || selectedCliente.fechaPedido
-      };
-      
-      console.log("✅ Cliente COMBINADO final:", fullyUpdatedCliente);
-      
-      // 🚀 ACTUALIZACIÓN INMEDIATA - Primero actualizar selectedCliente
-      setSelectedCliente(fullyUpdatedCliente);
-      
-      // Después actualizar la lista de clientes
+    const response = await axios.put(
+      `https://sistemaderegistro2.onrender.com/api/clientes/${selectedCliente._id}`, 
+      dataToUpdate,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    console.log("✅ Respuesta del servidor:", response.data);
+    
+    // 🎯 SINCRONIZAR CON DATOS DEL SERVIDOR
+    const serverResponse = response.data.cliente || response.data.data || response.data;
+    
+    const finalUpdatedCliente = {
+      ...updatedClienteOptimistic,  // Mantener cambios optimistas
+      ...serverResponse,            // Sobrescribir con datos del servidor
+      _id: selectedCliente._id      // Asegurar ID
+    };
+    
+    console.log("🔄 Sincronizando con servidor:", finalUpdatedCliente);
+    
+    // ACTUALIZACIÓN FINAL (solo si hay diferencias)
+    const hasChanges = JSON.stringify(updatedClienteOptimistic) !== JSON.stringify(finalUpdatedCliente);
+    
+    if (hasChanges) {
+      console.log('🔄 Aplicando cambios del servidor');
+      setSelectedCliente(finalUpdatedCliente);
       setClientes(prevClientes => 
         Array.isArray(prevClientes)
           ? prevClientes.map(cliente => 
               cliente._id === selectedCliente._id 
-                ? fullyUpdatedCliente
+                ? finalUpdatedCliente
                 : cliente
             )
-          : [fullyUpdatedCliente]
+          : [finalUpdatedCliente]
       );
-      
-      console.log("✅ ACTUALIZACIÓN INSTANTÁNEA COMPLETADA");
-      
-      // Cerrar el modal y mostrar éxito
-      setShowEditAlert(false);
-      setSuccessType('edit');
-      setShowSuccessAlert(true);
-      
-    } catch (error) {
-      console.error("❌ Error completo al actualizar cliente:", error);
-      console.error("❌ Response data:", error.response?.data);
-      console.error("❌ Response status:", error.response?.status);
-      
-      let errorMessage = 'Error al actualizar el cliente';
-      
-      if (error.response) {
-        errorMessage = `Error ${error.response.status}: ${error.response.data?.message || 'Error del servidor'}`;
-      } else if (error.request) {
-        errorMessage = 'No se pudo conectar con el servidor';
-      } else {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-    } finally {
-      // IMPORTANTE: Siempre desactivar el estado de carga
-      setUploading(false);
+    } else {
+      console.log('✅ No hay diferencias, UI ya está actualizada');
     }
-  };
+    
+    // Mostrar éxito
+    setSuccessType('edit');
+    setShowSuccessAlert(true);
+    
+    // Auto-cerrar alerta de éxito después de 3 segundos
+    setTimeout(() => {
+      setShowSuccessAlert(false);
+    }, 3000);
+    
+  } catch (error) {
+    console.error("❌ Error al sincronizar con servidor:", error);
+    
+    // 🔙 ROLLBACK - Revertir cambios optimistas si falla
+    console.log('🔙 Revirtiendo cambios optimistas por error del servidor');
+    setSelectedCliente(selectedCliente); // Volver al estado original
+    setClientes(prevClientes => 
+      Array.isArray(prevClientes)
+        ? prevClientes.map(cliente => 
+            cliente._id === selectedCliente._id 
+              ? selectedCliente  // Revertir al original
+              : cliente
+          )
+        : [selectedCliente]
+    );
+    
+    // Mostrar error específico
+    let errorMessage = 'Error al actualizar el cliente';
+    if (error.response) {
+      errorMessage = `Error ${error.response.status}: ${error.response.data?.message || 'Error del servidor'}`;
+    } else if (error.request) {
+      errorMessage = 'No se pudo conectar con el servidor. Cambios no guardados.';
+    } else {
+      errorMessage = error.message;
+    }
+    
+    setError(errorMessage);
+    
+    // Reabrir modal para que el usuario pueda reintentar
+    setShowEditAlert(true);
+    
+  } finally {
+    setUploading(false);
+  }
+};
 
   // Cerrar modales
   const closeAlert = () => {
