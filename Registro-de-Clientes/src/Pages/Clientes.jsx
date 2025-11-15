@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Phone, Mail, User, ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import sandyLoadingAnimation from '../assets/Sandy Loading.json';
-import useClients from '../hooks/useDataCliente'; // Ajusta la ruta según tu estructura
+import useClients from '../hooks/useDataCliente';
 
-const Clientes= () => {
+const Clientes = () => {
+  const navigate = useNavigate();
+  
   const {
     clients,
     selectedClient,
@@ -97,6 +100,11 @@ const Clientes= () => {
     setCurrentPage(1);
   }, [searchTerm, sortBy]);
 
+  // Función para navegar a agregar cliente
+  const handleAddClient = () => {
+    navigate('/agregar-cliente'); // Ajusta la ruta según tu configuración
+  };
+
   return (
     <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
       <div className="container mx-auto px-6 py-8">
@@ -125,6 +133,15 @@ const Clientes= () => {
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Botón Agregar Cliente */}
+                  <button 
+                    onClick={handleAddClient}
+                    className="flex items-center space-x-2 px-6 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Nuevo Cliente</span>
+                  </button>
                 </div>
                 
                 <div className="flex items-center justify-between space-x-4">
@@ -159,7 +176,7 @@ const Clientes= () => {
                 </div>
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
-                  Fecha Nacimiento
+                  Fecha Pedido
                 </div>
                 {!showDetailView && (
                   <>
@@ -204,13 +221,22 @@ const Clientes= () => {
                       <p className="text-gray-500 text-lg mb-2">
                         {searchTerm ? 'No se encontraron resultados para tu búsqueda.' : 'No hay clientes registrados.'}
                       </p>
-                      {searchTerm && (
+                      {searchTerm ? (
                         <button 
                           onClick={() => setSearchTerm('')}
                           className="mt-2 px-4 py-2 text-white rounded-lg transition-colors shadow-md hover:shadow-lg"
                           style={{backgroundColor: '#5F8EAD'}}
                         >
                           Limpiar búsqueda
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={handleAddClient}
+                          className="mt-4 flex items-center space-x-2 px-6 py-3 mx-auto text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                          style={{backgroundColor: '#5F8EAD'}}
+                        >
+                          <Plus className="w-5 h-5" />
+                          <span>Agregar primer cliente</span>
                         </button>
                       )}
                     </div>
@@ -238,15 +264,15 @@ const Clientes= () => {
                           }`} style={{backgroundColor: selectedClient && selectedClient._id === client._id ? 'rgba(255,255,255,0.2)' : '#5F8EAD'}}>
                             <User className={`w-5 h-5 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-white'}`} />
                           </div>
-                          <span className="truncate">{client.firstName} {client.lastName}</span>
+                          <span className="truncate">{client.firstName || 'Sin nombre'}</span>
                         </div>
                         <div className="flex items-center truncate">
                           <Mail className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                          <span className="truncate">{client.email}</span>
+                          <span className="truncate">{client.email || 'N/A'}</span>
                         </div>
                         <div className="flex items-center truncate">
                           <CreditCard className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                          <span className="truncate">{client.idNumber}</span>
+                          <span className="truncate">{client.idNumber || 'N/A'}</span>
                         </div>
                         <div className="flex items-center truncate">
                           <Calendar className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
@@ -461,7 +487,7 @@ const Clientes= () => {
                         </div>
                       </div>
                       <h3 className="font-bold text-xl mb-2 text-gray-900">
-                        {selectedClient.firstName} {selectedClient.lastName}
+                        {selectedClient.firstName || 'Sin nombre'}
                       </h3>
                       
                       <div className="flex justify-center space-x-3">
@@ -476,23 +502,31 @@ const Clientes= () => {
 
                     {/* Information Cards */}
                     <div className="space-y-6">
-                      {/* Información Personal */}
+                      {/* Información del Pedido */}
                       <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                         <div className="flex items-center space-x-3 mb-4">
                           <div className="p-2 rounded-lg" style={{backgroundColor: '#5F8EAD'}}>
                             <User className="w-5 h-5 text-white" />
                           </div>
-                          <span className="font-semibold text-gray-900">Información Personal</span>
+                          <span className="font-semibold text-gray-900">Información del Pedido</span>
                         </div>
 
                         <div className="space-y-4">
                           <div>
-                            <div className="text-sm font-medium text-gray-700 mb-1">Correo Electrónico</div>
-                            <div className="text-sm text-gray-600 break-words bg-white p-3 rounded-lg border">{selectedClient.email}</div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Producto</div>
+                            <div className="text-sm text-gray-600 break-words bg-white p-3 rounded-lg border">
+                              {selectedClient.producto || 'No especificado'}
+                            </div>
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-700 mb-1">DUI</div>
-                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border">{selectedClient.idNumber}</div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Fecha del Pedido</div>
+                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
+                              <Calendar className="w-4 h-4 mr-2" style={{color: '#5F8EAD'}} />
+                              {selectedClient.birthDate ? 
+                                new Date(selectedClient.birthDate).toLocaleDateString() : 
+                                'No disponible'
+                              }
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -507,16 +541,6 @@ const Clientes= () => {
                         </div>
 
                         <div className="space-y-4">
-                          <div>
-                            <div className="text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</div>
-                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
-                              <Calendar className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
-                              {selectedClient.birthDate ? 
-                                new Date(selectedClient.birthDate).toLocaleDateString() : 
-                                'No disponible'
-                              }
-                            </div>
-                          </div>
                           <div>
                             <div className="text-sm font-medium text-gray-700 mb-1">Teléfono</div>
                             <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">

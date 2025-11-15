@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-const API_URL = "https://sistemaderegistro2.onrender.com/api";
+
+// URL de la API - usa proxy en desarrollo, URL completa en producción
+const API_URL = import.meta.env.DEV 
+  ? '/api'  // En desarrollo usa el proxy de Vite
+  : 'https://sistemaderegistro2.onrender.com/api'; // En producción usa la URL directa
 
 const useDataCliente = () => {
   // Estados principales
@@ -26,8 +30,14 @@ const useDataCliente = () => {
       setError(null);
       
       console.log('🚀 Iniciando petición a la API de clientes...');
+      console.log('📍 URL:', `${API_URL}/clientes`);
       
-      const response = await axios.get(`${API_URL}/clientes`);
+      const response = await axios.get(`${API_URL}/clientes`, {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       console.log('📡 Status de la respuesta:', response.status);
       console.log('📋 Datos recibidos completos:', response.data);
@@ -68,21 +78,21 @@ const useDataCliente = () => {
         console.log('📋 Primeros clientes:', clientsArray.slice(0, 2));
       }
 
-      // Normalizar los datos de clientes
+      // Normalizar los datos de clientes para que coincidan con tu esquema de Render
       const normalizedClients = clientsArray.map((client, index) => {
         console.log(`🔄 Normalizando cliente ${index + 1}:`, client);
         
         return {
           ...client,
-          // Normalizar el campo firstName (tu API tiene "firtsName" con typo)
-          firstName: client.firstName || client.firtsName || '',
-          // Asegurar que todos los campos existan
+          // Mapear campos del backend de Render a tu frontend
+          firstName: client.nombre || client.firstName || client.firtsName || '',
           lastName: client.lastName || '',
           email: client.email || '',
           idNumber: client.idNumber || '',
-          birthDate: client.birthDate || null,
-          phone: client.phone || '',
-          address: client.address || '',
+          birthDate: client.fechaPedido || client.birthDate || null,
+          phone: client.telefono || client.phone || '',
+          address: client.dirrecion || client.address || '',
+          producto: client.producto || '',
           _id: client._id || client.id || `temp-${index}`
         };
       });
@@ -98,7 +108,7 @@ const useDataCliente = () => {
       
       // Verificar si es un error de red
       if (error.message.includes('Network') || error.code === 'ERR_NETWORK') {
-        setError('No se puede conectar al servidor. Verifica que esté ejecutándose en https://sistemaderegistro2.onrender.com/api');
+        setError('No se puede conectar al servidor. Verifica que esté ejecutándose en https://sistemaderegistro2.onrender.com');
       } else if (error.response) {
         setError(`Error del servidor: ${error.response.status} - ${error.response.data?.message || 'Error desconocido'}`);
       } else {
@@ -115,18 +125,34 @@ const useDataCliente = () => {
   const addClient = async (clientData) => {
     try {
       console.log('➕ Agregando nuevo cliente:', clientData);
-      const response = await axios.post(`${API_URL}/clientes`, clientData);
+      
+      // Mapear datos del frontend al formato del backend de Render
+      const dataToSend = {
+        nombre: clientData.nombre || clientData.firstName || '',
+        producto: clientData.producto || '',
+        fechaPedido: clientData.fechaPedido || clientData.birthDate || '',
+        telefono: clientData.telefono || clientData.phone || '',
+        dirrecion: clientData.dirrecion || clientData.address || ''
+      };
+      
+      const response = await axios.post(`${API_URL}/clientes`, dataToSend, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      });
       
       const newClient = response.data.data || response.data;
       const normalizedClient = {
         ...newClient,
-        firstName: newClient.firstName || newClient.firtsName || '',
+        firstName: newClient.nombre || newClient.firstName || newClient.firtsName || '',
         lastName: newClient.lastName || '',
         email: newClient.email || '',
         idNumber: newClient.idNumber || '',
-        birthDate: newClient.birthDate || null,
-        phone: newClient.phone || '',
-        address: newClient.address || ''
+        birthDate: newClient.fechaPedido || newClient.birthDate || null,
+        phone: newClient.telefono || newClient.phone || '',
+        address: newClient.dirrecion || newClient.address || '',
+        producto: newClient.producto || ''
       };
       
       setClients(prev => Array.isArray(prev) ? [...prev, normalizedClient] : [normalizedClient]);
@@ -145,18 +171,34 @@ const useDataCliente = () => {
   const updateClient = async (clientId, updateData) => {
     try {
       console.log(`📝 Actualizando cliente ${clientId}:`, updateData);
-      const response = await axios.put(`${API_URL}/clientes/${clientId}`, updateData);
+      
+      // Mapear datos del frontend al formato del backend de Render
+      const dataToSend = {
+        nombre: updateData.nombre || updateData.firstName || '',
+        producto: updateData.producto || '',
+        fechaPedido: updateData.fechaPedido || updateData.birthDate || '',
+        telefono: updateData.telefono || updateData.phone || '',
+        dirrecion: updateData.dirrecion || updateData.address || ''
+      };
+      
+      const response = await axios.put(`${API_URL}/clientes/${clientId}`, dataToSend, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      });
       
       const updatedClientData = response.data.cliente || response.data.data || { ...selectedClient, ...updateData };
       const updatedClient = {
         ...updatedClientData,
-        firstName: updatedClientData.firstName || updatedClientData.firtsName || '',
+        firstName: updatedClientData.nombre || updatedClientData.firstName || updatedClientData.firtsName || '',
         lastName: updatedClientData.lastName || '',
         email: updatedClientData.email || '',
         idNumber: updatedClientData.idNumber || '',
-        birthDate: updatedClientData.birthDate || null,
-        phone: updatedClientData.phone || '',
-        address: updatedClientData.address || ''
+        birthDate: updatedClientData.fechaPedido || updatedClientData.birthDate || null,
+        phone: updatedClientData.telefono || updatedClientData.phone || '',
+        address: updatedClientData.dirrecion || updatedClientData.address || '',
+        producto: updatedClientData.producto || ''
       };
       
       setClients(prev => 
@@ -185,7 +227,9 @@ const useDataCliente = () => {
   const deleteClient = async (clientId) => {
     try {
       console.log(`🗑️ Eliminando cliente ${clientId}`);
-      await axios.delete(`${API_URL}/clientes/${clientId}`);
+      await axios.delete(`${API_URL}/clientes/${clientId}`, {
+        timeout: 10000
+      });
       setClients(prev => Array.isArray(prev) ? prev.filter(client => client._id !== clientId) : []);
       
       // Limpiar selección si se elimina el cliente seleccionado
@@ -207,7 +251,7 @@ const useDataCliente = () => {
 
   // Función para filtrar clientes - WITH SAFETY CHECK
   const filteredClients = Array.isArray(clients) ? clients.filter((client) =>
-    [client.firstName, client.lastName, client.idNumber, client.email]
+    [client.firstName, client.lastName, client.idNumber, client.email, client.phone, client.producto]
       .join(' ')
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
