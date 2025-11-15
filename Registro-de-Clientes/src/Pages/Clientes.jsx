@@ -1,82 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import useDataCliente from '../hooks/useDataCliente';
+import { Search, Phone, Mail, User, ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus } from 'lucide-react';
+import Lottie from 'lottie-react';
+import sandyLoadingAnimation from '../assets/Sandy Loading.json';
+import useClients from '../hooks/useDataCliente'; // Ajusta la ruta según tu estructura
 
-// Importar componentes UI
-import SweetAlert from '../Components/UIEmpleados/SweetAlert';
-import ConfirmDeleteAlert from '../Components/UIEmpleados/ConfirmDeleteAlert';
-import SuccessAlert from '../Components/UIEmpleados/SuccessAlert';
-import Pagination from '../Components/UIEmpleados/Pagination';
-import LoadingSpinner, { EmptyState } from '../Components/UIEmpleados/LoadingSpinner';
-import SavingIndicator from '../Components/SavingIndicator';
-
-// Importar componentes específicos de clientes
-import ClienteHeader from '../Components/ClienteHeader';
-import ClienteTableHeader from '../Components/ClienteTableHeader';
-import ClienteRow from '../Components/ClienteRow';
-import ClienteDetailPanel from '../Components/ClienteDetailPanel';
-import EditClienteModal from '../Components/EditClienteModal';
-
-const Cliente = () => {
+const Clientes= () => {
   const {
-    empleados: clientes,
-    selectedEmpleados: selectedCliente,
+    clients,
+    selectedClient,
     showDetailView,
     loading,
     error,
     searchTerm,
     sortBy,
-    uploading,
     setSearchTerm,
     setSortBy,
-    showAlert,
-    showConfirmDelete,
-    showSuccessAlert,
-    showEditAlert,
-    successType,
-    filterEmpleados: filterClientes,
-    handleContinue,
-    handleOptionsClick,
-    handleEdit,
-    handleDelete,
-    confirmDelete,
-    cancelDelete,
-    handleSaveEdit,
-    closeAlert,
-    closeSuccessAlert,
-    closeEditAlert,
-    selectEmpleado: selectCliente,
-    closeDetailView
-  } = useDataCliente();
+    selectClient,
+    closeDetailView,
+    stats
+  } = useClients();
 
   // Estados para paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Función para ordenar clientes
-  const getSortedClientes = () => {
-    let sorted = [...filterClientes];
-    
-    if (sortBy === 'Newest') {
-      sorted.sort((a, b) => new Date(b.fechaPedido || b.createdAt) - new Date(a.fechaPedido || a.createdAt));
-    } else if (sortBy === 'Oldest') {
-      sorted.sort((a, b) => new Date(a.fechaPedido || a.createdAt) - new Date(b.fechaPedido || b.createdAt));
+  // Estado para la animación de carga del panel de detalles
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+  // Efecto para activar loading cuando cambie el cliente seleccionado
+  useEffect(() => {
+    if (selectedClient && showDetailView) {
+      setIsDetailLoading(true);
+      const timer = setTimeout(() => {
+        setIsDetailLoading(false);
+      }, 2500);
+
+      return () => clearTimeout(timer);
     }
-    
-    return sorted;
-  };
+  }, [selectedClient, showDetailView]);
 
   // Obtener clientes para la página actual
-  const getCurrentPageClientes = () => {
-    const sortedClientes = getSortedClientes();
+  const getCurrentPageClients = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return sortedClientes.slice(startIndex, endIndex);
+    return clients.slice(startIndex, endIndex);
   };
 
   // Calcular número total de páginas
-  const totalPages = Math.ceil(filterClientes.length / itemsPerPage);
+  const totalPages = Math.ceil(clients.length / itemsPerPage);
 
   // Función para cambiar página
   const handlePageChange = (page) => {
@@ -126,420 +97,452 @@ const Cliente = () => {
     setCurrentPage(1);
   }, [searchTerm, sortBy]);
 
-  // Monitorear actualizaciones en tiempo real
-  useEffect(() => {
-    if (selectedCliente && !uploading) {
-      setLastUpdated(new Date().toLocaleTimeString());
-    }
-  }, [selectedCliente, uploading]);
-
-  // Función wrapper para handleSaveEdit con feedback inmediato
-  const handleSaveWithFeedback = async (dataToUpdate) => {
-    await handleSaveEdit(dataToUpdate);
-  };
-
-  // Renderizar contenido de la tabla
-  const renderTableContent = () => {
-    if (loading) {
-      return <LoadingSpinner message="Cargando clientes..." />;
-    }
-
-    if (error) {
-      return (
-        <div className="text-center py-6 sm:py-12">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
-            <p className="text-red-600 text-sm sm:text-base">{error}</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (filterClientes.length === 0) {
-      return (
-        <EmptyState 
-          title="No se encontraron clientes"
-          description="Intenta ajustar los filtros de búsqueda o agrega tu primer cliente."
-        />
-      );
-    }
-
-    return (
-      <div className="space-y-2 pt-2 sm:pt-4">
-        {getCurrentPageClientes().map((cliente, index) => (
-          <ClienteRow
-            key={`${cliente._id}-${lastUpdated || index}`}
-            empleado={cliente}
-            showDetailView={showDetailView}
-            selectedEmpleados={selectedCliente}
-            selectEmpleado={selectCliente}
-          />
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="fixed inset-0 cliente-container" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
-      {/* Indicador de guardado en tiempo real */}
-      <SavingIndicator 
-        uploading={uploading}
-        successType={successType}
-        showSuccessAlert={showSuccessAlert}
-      />
-
-      <div className="h-full w-full flex flex-col lg:flex-row">
-        
-        {/* Panel Principal */}
-        <div className={`${showDetailView ? 'lg:flex-1' : 'w-full'} bg-white lg:rounded-l-2xl xl:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden cliente-main-panel h-full`}>
-          
-          {/* Header */}
-          <div className="flex-shrink-0 border-b border-gray-100">
-            <ClienteHeader
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              filterClientes={filterClientes}
-              handleContinue={handleContinue}
-            />
-          </div>
-
-          {/* Table Header */}
-          <div className="flex-shrink-0 border-b border-gray-50">
-            <ClienteTableHeader showDetailView={showDetailView} />
-          </div>
-
-          {/* Table Content */}
-          <div className="flex-1 overflow-y-auto cliente-scroll">
-            <div className="p-3 sm:p-4 md:p-6 lg:p-8 pt-0">
-              {renderTableContent()}
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex h-[calc(100vh-4rem)]">
+          {/* Panel Principal */}
+          <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl ${showDetailView ? 'mr-6' : ''} flex flex-col overflow-hidden`}>
+            {/* Header */}
+            <div className="p-8 pb-6" style={{background: 'linear-gradient(135deg, #5F8EAD 0%, #4a7ba7 100%)'}}>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">Gestión de Clientes</h1>
+                  <p className="text-blue-100 text-lg">Administra tu cartera de clientes</p>
+                </div>
+                <div className="bg-white bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              
+              <div className="bg-white bg-opacity-10 rounded-xl p-6 backdrop-blur-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-white mb-1">Directorio de Clientes</h2>
+                    <div className="text-blue-100 flex items-center">
+                      <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                        {stats.total > 0 ? `${stats.total} Registrados` : 'Clientes registrados'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between space-x-4">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input 
+                      type="text" 
+                      placeholder="Buscar clientes..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 text-gray-700 placeholder-gray-400 shadow-lg"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Footer con Paginación */}
-          {filterClientes.length > 0 && !loading && (
-            <div className="flex-shrink-0 border-t border-gray-100">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                handlePageChange={handlePageChange}
-                getPageNumbers={getPageNumbers}
-                itemsPerPage={itemsPerPage}
-                totalItems={filterClientes.length}
-              />
+            {/* Table Header */}
+            <div className="px-8 py-4 border-b-2" style={{borderColor: '#5F8EAD', backgroundColor: '#f8fafc'}}>
+              <div className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 text-sm font-semibold`} style={{color: '#5F8EAD'}}>
+                <div className="flex items-center">
+                  <User className="w-4 h-4 mr-2" />
+                  Nombres
+                </div>
+                <div className="flex items-center">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email
+                </div>
+                <div className="flex items-center">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  DUI
+                </div>
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Fecha Nacimiento
+                </div>
+                {!showDetailView && (
+                  <>
+                    <div className="flex items-center">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Teléfono
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Dirección
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Panel de Detalles - Desktop */}
-        {showDetailView && selectedCliente && (
-          <div className="hidden lg:block lg:w-96 xl:w-[400px] 2xl:w-[450px] h-full">
-            <ClienteDetailPanel
-              selectedEmpleados={selectedCliente}
-              closeDetailView={closeDetailView}
-              handleOptionsClick={handleOptionsClick}
-            />
-          </div>
-        )}
+            {/* Table Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-8 pt-0">
+                {loading ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{borderColor: '#5F8EAD'}}></div>
+                    <p className="text-gray-500 mt-4">Cargando clientes...</p>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-12">
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                      <p className="text-red-600 mb-4">{error}</p>
+                      <button 
+                        onClick={() => window.location.reload()} 
+                        className="px-6 py-2 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md"
+                        style={{backgroundColor: '#ef4444'}}
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  </div>
+                ) : !stats.hasResults ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-8">
+                      <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 text-lg mb-2">
+                        {searchTerm ? 'No se encontraron resultados para tu búsqueda.' : 'No hay clientes registrados.'}
+                      </p>
+                      {searchTerm && (
+                        <button 
+                          onClick={() => setSearchTerm('')}
+                          className="mt-2 px-4 py-2 text-white rounded-lg transition-colors shadow-md hover:shadow-lg"
+                          style={{backgroundColor: '#5F8EAD'}}
+                        >
+                          Limpiar búsqueda
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-4">
+                    {getCurrentPageClients().map((client, index) => (
+                      <div
+                        key={client._id || index}
+                        className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
+                          selectedClient && selectedClient._id === client._id 
+                            ? 'shadow-lg transform scale-[1.02]' 
+                            : 'hover:shadow-md hover:transform hover:scale-[1.01] border-transparent'
+                        }`}
+                        style={{
+                          backgroundColor: selectedClient && selectedClient._id === client._id ? '#5D9646' : '#ffffff',
+                          color: selectedClient && selectedClient._id === client._id ? '#ffffff' : '#374151',
+                          borderColor: selectedClient && selectedClient._id === client._id ? '#5D9646' : 'transparent'
+                        }}
+                        onClick={() => selectClient(client)}
+                      >
+                        <div className="font-semibold flex items-center">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                            selectedClient && selectedClient._id === client._id ? 'bg-white bg-opacity-20' : ''
+                          }`} style={{backgroundColor: selectedClient && selectedClient._id === client._id ? 'rgba(255,255,255,0.2)' : '#5F8EAD'}}>
+                            <User className={`w-5 h-5 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-white'}`} />
+                          </div>
+                          <span className="truncate">{client.firstName} {client.lastName}</span>
+                        </div>
+                        <div className="flex items-center truncate">
+                          <Mail className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                          <span className="truncate">{client.email}</span>
+                        </div>
+                        <div className="flex items-center truncate">
+                          <CreditCard className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                          <span className="truncate">{client.idNumber}</span>
+                        </div>
+                        <div className="flex items-center truncate">
+                          <Calendar className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                          <span className="truncate">
+                            {client.birthDate ? new Date(client.birthDate).toLocaleDateString() : 'No disponible'}
+                          </span>
+                        </div>
+                        {!showDetailView && (
+                          <>
+                            <div className="flex items-center truncate">
+                              <Phone className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                              <span className="truncate">
+                                {client.phone ? client.phone.toString() : 'No disponible'}
+                              </span>
+                            </div>
+                            <div className="flex items-center truncate">
+                              <MapPin className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                              <span className="truncate">
+                                {client.address || 'No disponible'}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
-        {/* Panel de Detalles - Mobile/Tablet (Modal overlay) */}
-        {showDetailView && selectedCliente && (
-          <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm cliente-modal-overlay">
-            <div className="h-full flex items-end sm:items-center justify-center p-2 sm:p-4">
-              <div className="w-full sm:w-96 sm:max-w-lg h-full sm:h-auto sm:max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden">
-                <ClienteDetailPanel
-                  selectedEmpleados={selectedCliente}
-                  closeDetailView={closeDetailView}
-                  handleOptionsClick={handleOptionsClick}
-                />
+            {/* Footer */}
+            <div className="p-8 pt-4 border-t border-gray-100" style={{backgroundColor: '#f8fafc'}}>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, clients.length)} de {clients.length} clientes
+                  {searchTerm && ` (filtrado de ${stats.total} total)`}
+                </div>
+                
+                <div className="flex items-center space-x-1">
+                  <button 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-3 hover:bg-white rounded-xl transition-colors shadow-sm border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-gray-500" />
+                  </button>
+                  <div className="flex space-x-1">
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={index} className="w-10 h-10 flex items-center justify-center text-gray-400">...</span>
+                      ) : (
+                        <button 
+                          key={index}
+                          onClick={() => handlePageChange(page)}
+                          className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? 'text-white shadow-sm'
+                              : 'text-gray-700 border border-gray-200 hover:bg-white'
+                          }`}
+                          style={currentPage === page ? {backgroundColor: '#5F8EAD'} : {}}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-3 hover:bg-white rounded-xl transition-colors shadow-sm border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        )}
+
+          {/* Panel de Detalles */}
+          {showDetailView && selectedClient && (
+            <div className="w-96 bg-white rounded-2xl shadow-2xl relative overflow-hidden flex flex-col h-full">
+              {isDetailLoading ? (
+                /* Enhanced Loading Screen with Lottie */
+                <div className="flex-1 flex items-center justify-center relative" 
+                     style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b2f 100%)'}}>
+                  
+                  {/* Background Animation */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute top-10 left-10 w-20 h-20 rounded-full opacity-10 animate-pulse"
+                         style={{backgroundColor: '#5F8EAD', animation: 'float 3s ease-in-out infinite'}}>
+                    </div>
+                    <div className="absolute bottom-10 right-10 w-16 h-16 rounded-full opacity-10 animate-pulse"
+                         style={{backgroundColor: '#5D9646', animation: 'float 3s ease-in-out infinite reverse'}}>
+                    </div>
+                    <div className="absolute top-1/2 left-4 w-12 h-12 rounded-full opacity-10 animate-pulse"
+                         style={{backgroundColor: '#5F8EAD', animation: 'float 4s ease-in-out infinite'}}>
+                    </div>
+                  </div>
+
+                  <div className="text-center z-10">
+                    {/* Lottie Animation */}
+                    <div className="relative mb-8">
+                      <div className="w-40 h-40 mx-auto mb-6 flex items-center justify-center">
+                        <Lottie 
+                          animationData={sandyLoadingAnimation}
+                          className="w-full h-full"
+                          loop={true}
+                          autoplay={true}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Enhanced Loading Text */}
+                    <div className="space-y-4 mb-8">
+                      <h2 className="text-2xl font-bold text-white animate-pulse">
+                        Cargando Cliente
+                      </h2>
+                      <p className="text-gray-300 text-lg">
+                        Preparando información del cliente
+                      </p>
+                    </div>
+                    
+                    {/* Advanced Progress Bar */}
+                    <div className="w-80 mx-auto">
+                      <div className="w-full bg-gray-600 rounded-full h-2 mb-4 overflow-hidden shadow-inner">
+                        <div className="h-2 rounded-full relative overflow-hidden"
+                             style={{
+                               background: 'linear-gradient(90deg, #5F8EAD 0%, #5D9646 50%, #5F8EAD 100%)',
+                               width: '100%',
+                               animation: 'loading-wave 2.5s ease-in-out infinite'
+                             }}>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40"
+                               style={{animation: 'shimmer 1.5s ease-in-out infinite'}}>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Dynamic Loading Steps */}
+                      <div className="text-sm text-gray-400 animate-pulse">
+                        <span className="inline-block" style={{animation: 'text-fade 3s ease-in-out infinite'}}>
+                          Verificando información del cliente...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <style jsx>{`
+                    @keyframes loading-wave {
+                      0% { 
+                        transform: translateX(-100%);
+                        opacity: 0.5;
+                      }
+                      50% { 
+                        transform: translateX(0%);
+                        opacity: 1;
+                      }
+                      100% { 
+                        transform: translateX(100%);
+                        opacity: 0.5;
+                      }
+                    }
+                    
+                    @keyframes float {
+                      0%, 100% {
+                        transform: translateY(0px) scale(1);
+                      }
+                      50% {
+                        transform: translateY(-10px) scale(1.1);
+                      }
+                    }
+                    
+                    @keyframes shimmer {
+                      0% {
+                        transform: translateX(-100%);
+                      }
+                      100% {
+                        transform: translateX(100%);
+                      }
+                    }
+                    
+                    @keyframes text-fade {
+                      0%, 100% { opacity: 0.6; }
+                      50% { opacity: 1; }
+                    }
+                  `}</style>
+                </div>
+              ) : (
+                <>
+                  {/* Background Pattern */}
+                  <div className="absolute top-0 right-0 w-32 h-32 opacity-5" style={{backgroundColor: '#5F8EAD', borderRadius: '0 0 0 100%'}}></div>
+                  
+                  {/* Header - Fijo */}
+                  <div className="flex items-center justify-between p-8 pb-4 flex-shrink-0">
+                    <div className="flex items-center">
+                      <button
+                        className="p-3 hover:bg-gray-100 rounded-xl mr-3 transition-colors"
+                        onClick={closeDetailView}
+                      >
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                      </button>
+                      <h2 className="text-xl font-semibold text-gray-900">Detalles del Cliente</h2>
+                    </div>
+                  </div>
+
+                  {/* Contenido Scrolleable */}
+                  <div className="flex-1 overflow-y-auto px-8 pb-8">
+                    {/* Profile Section */}
+                    <div className="text-center mb-10">
+                      <div className="relative inline-block">
+                        <div className="w-28 h-28 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg" style={{background: 'linear-gradient(135deg, #5F8EAD 0%, #4a7ba7 100%)'}}>
+                          <User className="w-14 h-14 text-white" />
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-xl mb-2 text-gray-900">
+                        {selectedClient.firstName} {selectedClient.lastName}
+                      </h3>
+                      
+                      <div className="flex justify-center space-x-3">
+                        <button className="p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-md" style={{backgroundColor: '#5D9646'}}>
+                          <Phone className="w-5 h-5 text-white" />
+                        </button>
+                        <button className="p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-md" style={{backgroundColor: '#5F8EAD'}}>
+                          <Mail className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Information Cards */}
+                    <div className="space-y-6">
+                      {/* Información Personal */}
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="p-2 rounded-lg" style={{backgroundColor: '#5F8EAD'}}>
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                          <span className="font-semibold text-gray-900">Información Personal</span>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Correo Electrónico</div>
+                            <div className="text-sm text-gray-600 break-words bg-white p-3 rounded-lg border">{selectedClient.email}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">DUI</div>
+                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border">{selectedClient.idNumber}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Información de Contacto */}
+                      <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="p-2 rounded-lg" style={{backgroundColor: '#5D9646'}}>
+                            <Phone className="w-5 h-5 text-white" />
+                          </div>
+                          <span className="font-semibold text-gray-900">Contacto y Ubicación</span>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</div>
+                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
+                              <Calendar className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
+                              {selectedClient.birthDate ? 
+                                new Date(selectedClient.birthDate).toLocaleDateString() : 
+                                'No disponible'
+                              }
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Teléfono</div>
+                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
+                              <Phone className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
+                              {selectedClient.phone ? selectedClient.phone.toString() : 'No disponible'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Dirección</div>
+                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
+                              <MapPin className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
+                              {selectedClient.address || 'No disponible'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Modales */}
-      <SweetAlert
-        isOpen={showAlert}
-        onClose={closeAlert}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      <ConfirmDeleteAlert
-        isOpen={showConfirmDelete}
-        onClose={cancelDelete}
-        onConfirm={confirmDelete}
-        employeeName={selectedCliente ? selectedCliente.nombre : ''}
-      />
-
-      <SuccessAlert
-        isOpen={showSuccessAlert}
-        onClose={closeSuccessAlert}
-        type={successType}
-      />
-
-      <EditClienteModal
-        isOpen={showEditAlert}
-        onClose={closeEditAlert}
-        onSave={handleSaveWithFeedback}
-        employee={selectedCliente}
-        uploading={uploading}
-      />
-
-      {/* Estilos optimizados para móviles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          /* Reset completo para pantalla completa */
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 100% !important;
-            overflow: hidden !important;
-          }
-          
-          #root {
-            height: 100vh !important;
-            width: 100vw !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-
-          /* Contenedor principal en pantalla completa */
-          .cliente-container {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-          }
-
-          /* Panel principal optimizado */
-          .cliente-main-panel {
-            contain: layout style;
-            border-radius: 0 !important;
-          }
-
-          /* MÓVILES: Optimizaciones específicas */
-          @media (max-width: 640px) {
-            .cliente-container {
-              padding: 0 !important;
-            }
-            
-            .cliente-main-panel {
-              border-radius: 0 !important;
-              margin: 0 !important;
-            }
-
-            /* Header más compacto en móvil */
-            .cliente-main-panel > div:first-child {
-              padding: 1rem 0.75rem !important;
-            }
-
-            /* Tabla más compacta en móvil */
-            .cliente-scroll > div {
-              padding: 0.75rem !important;
-            }
-
-            /* Filas de cliente más compactas */
-            .cliente-row {
-              padding: 0.75rem !important;
-              font-size: 0.875rem !important;
-            }
-
-            /* Ocultar columnas menos importantes en móvil */
-            .hidden-mobile {
-              display: none !important;
-            }
-
-            /* Stack layout en móvil para detalles */
-            .mobile-stack {
-              flex-direction: column !important;
-              gap: 0.25rem !important;
-            }
-
-            /* Botones más grandes en móvil */
-            .mobile-button {
-              min-height: 44px !important;
-              font-size: 16px !important;
-            }
-
-            /* Paginación más compacta en móvil */
-            .pagination-mobile {
-              gap: 0.25rem !important;
-            }
-
-            .pagination-mobile button {
-              padding: 0.5rem !important;
-              min-width: 40px !important;
-              min-height: 40px !important;
-            }
-          }
-
-          /* TABLETS: Optimizaciones */
-          @media (min-width: 641px) and (max-width: 1023px) {
-            .cliente-modal-overlay .bg-white {
-              margin: 0.5rem;
-              height: calc(100vh - 1rem);
-              border-radius: 1rem !important;
-            }
-
-            /* Ajustes de padding para tablets */
-            .cliente-main-panel > div {
-              padding: 1.25rem !important;
-            }
-          }
-
-          /* DESKTOP: Solo redondear esquinas */
-          @media (min-width: 1024px) {
-            .cliente-main-panel {
-              border-top-left-radius: 1rem !important;
-              border-bottom-left-radius: 1rem !important;
-            }
-          }
-
-          @media (min-width: 1280px) {
-            .cliente-main-panel {
-              border-top-left-radius: 1.5rem !important;
-              border-bottom-left-radius: 1.5rem !important;
-            }
-          }
-
-          /* Scroll personalizado para la tabla */
-          .cliente-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: #CBD5E1 #F1F5F9;
-            -webkit-overflow-scrolling: touch;
-          }
-          
-          .cliente-scroll::-webkit-scrollbar {
-            width: 8px;
-          }
-          
-          @media (max-width: 640px) {
-            .cliente-scroll::-webkit-scrollbar {
-              width: 4px;
-            }
-          }
-          
-          .cliente-scroll::-webkit-scrollbar-track {
-            background: #F1F5F9;
-            border-radius: 4px;
-          }
-          
-          .cliente-scroll::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 4px;
-            transition: background 0.2s ease;
-          }
-          
-          .cliente-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94A3B8;
-          }
-
-          /* Animaciones para el modal móvil */
-          .cliente-modal-overlay {
-            animation: fadeIn 0.2s ease-out;
-          }
-          
-          .cliente-modal-overlay .bg-white {
-            animation: slideUp 0.3s ease-out;
-          }
-          
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes slideUp {
-            from { 
-              transform: translateY(100%);
-              opacity: 0;
-            }
-            to { 
-              transform: translateY(0);
-              opacity: 1;
-            }
-          }
-
-          /* Optimizaciones de rendimiento */
-          .cliente-container {
-            contain: layout style paint;
-            overscroll-behavior: contain;
-            will-change: transform;
-          }
-
-          /* Mejoras para pantallas táctiles */
-          @media (hover: none) and (pointer: coarse) {
-            .cliente-row:hover {
-              transform: none !important;
-            }
-            
-            .cliente-row:active {
-              transform: scale(0.98) !important;
-              transition: transform 0.1s ease !important;
-            }
-
-            /* Botones más grandes en pantallas táctiles */
-            button {
-              min-height: 44px !important;
-            }
-          }
-
-          /* Accesibilidad */
-          @media (prefers-reduced-motion: reduce) {
-            .cliente-modal-overlay,
-            .cliente-modal-overlay .bg-white,
-            .cliente-row {
-              animation: none !important;
-              transition: none !important;
-            }
-            
-            .cliente-scroll::-webkit-scrollbar-thumb {
-              transition: none !important;
-            }
-          }
-
-          /* Fix para pantallas muy anchas */
-          @media (min-width: 1920px) {
-            .cliente-container {
-              max-width: none !important;
-            }
-          }
-
-          /* Evitar zoom no deseado en móviles */
-          @media (max-width: 640px) {
-            input, select, textarea {
-              font-size: 16px !important;
-            }
-          }
-
-          /* Mejoras de contraste para accesibilidad */
-          @media (prefers-contrast: high) {
-            .cliente-row {
-              border: 2px solid #000 !important;
-            }
-              
-            .bg-gray-50 {
-              background-color: #f8f9fa !important;
-            }
-          }
-
-          /* Tema oscuro si es preferido */
-          @media (prefers-color-scheme: dark) {
-            .cliente-container {
-              background: linear-gradient(135deg, #1a1b1e 0%, #25262a 100%) !important;
-            }
-          }
-        `
-      }} />
     </div>
   );
 };
 
-export default Cliente;
+export default Clientes;
