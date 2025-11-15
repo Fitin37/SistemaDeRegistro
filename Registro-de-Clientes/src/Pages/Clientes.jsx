@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Phone, Mail, User, ArrowLeft, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus, Package, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Phone, Mail, User, ArrowLeft, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus, Package, CheckCircle, XCircle, MoreVertical, Edit2, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import sandyLoadingAnimation from '../assets/Sandy Loading.json';
 import useClients from '../hooks/useDataCliente';
+import Swal from 'sweetalert2';
 
 const Clientes = () => {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ const Clientes = () => {
     setSortBy,
     selectClient,
     closeDetailView,
+    updateClient,
+    deleteClient,
     stats
   } = useClients();
 
@@ -29,6 +32,22 @@ const Clientes = () => {
 
   // Estado para la animación de carga del panel de detalles
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  
+  // Estados para el menú de acciones
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
+  
+  // Estados para el modal de edición
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    nombre: '',
+    producto: '',
+    fechaPedido: '',
+    telefono: '',
+    dirrecion: '',
+    estado: 'pendiente'
+  });
 
   // Función para obtener configuración de estado
   const getEstadoConfig = (estado) => {
@@ -62,6 +81,150 @@ const Clientes = () => {
     };
     
     return configs[estadoLower] || configs['pendiente'];
+  };
+  
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  // Función para abrir modal de edición
+  const handleEdit = (client, e) => {
+    e.stopPropagation();
+    setEditingClient(client);
+    setEditFormData({
+      nombre: client.firstName || client.nombre || '',
+      producto: client.producto || '',
+      fechaPedido: client.fechaPedido ? new Date(client.fechaPedido).toISOString().split('T')[0] : '',
+      telefono: client.phone || client.telefono || '',
+      dirrecion: client.address || client.dirrecion || '',
+      estado: client.estado || 'pendiente'
+    });
+    setShowEditModal(true);
+    setOpenMenuId(null);
+  };
+  
+  // Función para manejar cambios en el formulario de edición
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    
+    let formattedValue = value;
+    if (name === 'telefono') {
+      const numbers = value.replace(/\D/g, '');
+      if (numbers.length >= 4) {
+        formattedValue = numbers.slice(0, 4) + '-' + numbers.slice(4, 8);
+      } else {
+        formattedValue = numbers;
+      }
+    }
+    
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: formattedValue
+    }));
+  };
+  
+  // Función para guardar cambios
+  const handleSaveEdit = async () => {
+    // Validar campos requeridos
+    if (!editFormData.nombre.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'El nombre es obligatorio',
+        confirmButtonColor: '#5F8EAD'
+      });
+      return;
+    }
+    
+    Swal.fire({
+      title: 'Guardando cambios...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+    const result = await updateClient(editingClient._id, editFormData);
+    
+    if (result.success) {
+      Swal.fire({
+        icon: 'success',
+        title: '¡Actualizado!',
+        text: 'El cliente ha sido actualizado exitosamente',
+        confirmButtonColor: '#5F8EAD',
+        timer: 2000
+      });
+      setShowEditModal(false);
+      setEditingClient(null);
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: result.error || 'No se pudo actualizar el cliente',
+        confirmButtonColor: '#ef4444'
+      });
+    }
+  };
+  
+  // Función para eliminar cliente
+  const handleDelete = async (client, e) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      html: `¿Deseas eliminar a <strong>${client.firstName || client.nombre}</strong>?<br/>Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    });
+    
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: 'Eliminando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      const deleteResult = await deleteClient(client._id);
+      
+      if (deleteResult.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Eliminado!',
+          text: 'El cliente ha sido eliminado exitosamente',
+          confirmButtonColor: '#5F8EAD',
+          timer: 2000
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: deleteResult.error || 'No se pudo eliminar el cliente',
+          confirmButtonColor: '#ef4444'
+        });
+      }
+    }
+  };
+  
+  // Toggle menú de acciones
+  const toggleMenu = (clientId, e) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === clientId ? null : clientId);
   };
 
   // Efecto para activar loading cuando cambie el cliente seleccionado
@@ -136,7 +299,7 @@ const Clientes = () => {
 
   // Función para navegar a agregar cliente
   const handleAddClient = () => {
-    navigate('/agregar-cliente');
+    navigate('/empleados/agregarEmployee');
   };
 
   return (
@@ -195,7 +358,7 @@ const Clientes = () => {
 
             {/* Table Header */}
             <div className="px-8 py-4 border-b-2" style={{borderColor: '#5F8EAD', backgroundColor: '#f8fafc'}}>
-              <div className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 text-sm font-semibold`} style={{color: '#5F8EAD'}}>
+              <div className={`grid ${showDetailView ? 'grid-cols-5' : 'grid-cols-7'} gap-6 text-sm font-semibold`} style={{color: '#5F8EAD'}}>
                 <div className="flex items-center">
                   <User className="w-4 h-4 mr-2" />
                   Nombre
@@ -224,6 +387,9 @@ const Clientes = () => {
                     </div>
                   </>
                 )}
+                <div className="flex items-center justify-center">
+                  Acciones
+                </div>
               </div>
             </div>
 
@@ -284,7 +450,7 @@ const Clientes = () => {
                       return (
                         <div
                           key={client._id || index}
-                          className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
+                          className={`grid ${showDetailView ? 'grid-cols-5' : 'grid-cols-7'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
                             selectedClient && selectedClient._id === client._id 
                               ? 'shadow-lg transform scale-[1.02]' 
                               : 'hover:shadow-md hover:transform hover:scale-[1.01] border-transparent'
@@ -345,6 +511,37 @@ const Clientes = () => {
                               </div>
                             </>
                           )}
+                          <div className="flex items-center justify-center relative" ref={openMenuId === client._id ? menuRef : null}>
+                            <button
+                              onClick={(e) => toggleMenu(client._id, e)}
+                              className={`p-2 rounded-lg transition-colors ${
+                                selectedClient && selectedClient._id === client._id 
+                                  ? 'hover:bg-white hover:bg-opacity-20' 
+                                  : 'hover:bg-gray-100'
+                              }`}
+                            >
+                              <MoreVertical className={`w-5 h-5 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-600'}`} />
+                            </button>
+                            
+                            {openMenuId === client._id && (
+                              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                                <button
+                                  onClick={(e) => handleEdit(client, e)}
+                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 text-gray-700 transition-colors"
+                                >
+                                  <Edit2 className="w-4 h-4 text-blue-600" />
+                                  <span>Editar</span>
+                                </button>
+                                <button
+                                  onClick={(e) => handleDelete(client, e)}
+                                  className="w-full px-4 py-3 text-left hover:bg-red-50 flex items-center space-x-3 text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>Eliminar</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -584,6 +781,163 @@ const Clientes = () => {
           )}
         </div>
       </div>
+      
+      {/* Modal de Edición */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header del Modal */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 p-6 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                  <Edit2 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Editar Cliente</h2>
+                  <p className="text-blue-100 text-sm">Actualiza la información del cliente</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-white" />
+              </button>
+            </div>
+            
+            {/* Contenido del Modal */}
+            <div className="p-6 space-y-6">
+              {/* Nombre */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nombre del Cliente *
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={editFormData.nombre}
+                    onChange={handleEditFormChange}
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                    placeholder="Ingrese el nombre"
+                  />
+                </div>
+              </div>
+              
+              {/* Producto */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Producto
+                </label>
+                <div className="relative">
+                  <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="producto"
+                    value={editFormData.producto}
+                    onChange={handleEditFormChange}
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                    placeholder="Ingrese el producto"
+                  />
+                </div>
+              </div>
+              
+              {/* Fecha Pedido y Estado */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Fecha del Pedido
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="date"
+                      name="fechaPedido"
+                      value={editFormData.fechaPedido}
+                      onChange={handleEditFormChange}
+                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Estado
+                  </label>
+                  <div className="relative">
+                    <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <select
+                      name="estado"
+                      value={editFormData.estado}
+                      onChange={handleEditFormChange}
+                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors appearance-none bg-white"
+                    >
+                      <option value="pendiente">Pendiente</option>
+                      <option value="vendido">Vendido</option>
+                      <option value="devolucion">Devolución</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Teléfono */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Teléfono
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="telefono"
+                    value={editFormData.telefono}
+                    onChange={handleEditFormChange}
+                    maxLength={9}
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                    placeholder="0000-0000"
+                  />
+                </div>
+              </div>
+              
+              {/* Dirección */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Dirección de Entrega
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <textarea
+                    name="dirrecion"
+                    value={editFormData.dirrecion}
+                    onChange={handleEditFormChange}
+                    rows={3}
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors resize-none"
+                    placeholder="Ingrese la dirección completa"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer del Modal */}
+            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-end space-x-3 rounded-b-2xl border-t">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-6 py-3 text-gray-700 bg-white border-2 border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl flex items-center space-x-2"
+              >
+                <CheckCircle className="w-5 h-5" />
+                <span>Guardar Cambios</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
