@@ -21,7 +21,10 @@ const ClienteSchema = new Schema({
         type:String,
         require:true
     },
-   
+   estado:{
+    type:String,
+    require:true
+   }
 },{timestamps:true,
     strict:false
 });

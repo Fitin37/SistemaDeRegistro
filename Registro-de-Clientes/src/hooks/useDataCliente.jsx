@@ -93,6 +93,7 @@ const useDataCliente = () => {
           phone: client.telefono || client.phone || '',
           address: client.dirrecion || client.address || '',
           producto: client.producto || '',
+          estado: client.estado || 'pendiente', // Agregar estado con valor por defecto
           _id: client._id || client.id || `temp-${index}`
         };
       });

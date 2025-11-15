@@ -18,10 +18,10 @@ const isValidObjectId = (id) => {
  */
 clienteCon.agregarCliente = async (req, res) => {
   try {
-    const { nombre, producto, fechaPedido, telefono, dirrecion } = req.body;
+    const { nombre, producto, fechaPedido, telefono, dirrecion,estado } = req.body;
 
     // Validación básica de campos requeridos
-    if (!nombre || !producto || !fechaPedido || !telefono || !dirrecion) {
+    if (!nombre || !producto || !fechaPedido || !telefono || !dirrecion ||!estado) {
       return res.status(400).json({
         success: false,
         message: "Faltan campos requeridos",
@@ -35,7 +35,8 @@ clienteCon.agregarCliente = async (req, res) => {
       producto: producto.trim(),
       fechaPedido: new Date(fechaPedido),
       telefono: telefono.trim(),
-      dirrecion: dirrecion.trim()
+      dirrecion: dirrecion.trim(),
+      estado:estado.trim()
     });
 
     // Guardar en base de datos
@@ -212,7 +213,7 @@ clienteCon.PutClientes = async (req, res) => {
       });
     }
 
-    const { nombre, producto, fechaPedido, telefono, dirrecion } = req.body;
+    const { nombre, producto, fechaPedido, telefono, dirrecion,estado } = req.body;
 
     // Preparar datos para actualización (solo campos proporcionados)
     const datosActualizados = {};
@@ -222,6 +223,7 @@ clienteCon.PutClientes = async (req, res) => {
     if (fechaPedido) datosActualizados.fechaPedido = new Date(fechaPedido);
     if (telefono) datosActualizados.telefono = telefono.trim();
     if (dirrecion !== undefined) datosActualizados.dirrecion = dirrecion.trim();
+    if (estado !== undefined) datosActualizados.estado = estado.trim();
 
     // Realizar la actualización
     const clienteActualizado = await clienteModel.findByIdAndUpdate(

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Phone, Mail, User, ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus } from 'lucide-react';
+import { Search, Phone, Mail, User, ArrowLeft, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus, Package, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import sandyLoadingAnimation from '../assets/Sandy Loading.json';
@@ -29,6 +29,40 @@ const Clientes = () => {
 
   // Estado para la animación de carga del panel de detalles
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+  // Función para obtener configuración de estado
+  const getEstadoConfig = (estado) => {
+    const estadoLower = (estado || '').toLowerCase();
+    
+    const configs = {
+      'vendido': {
+        label: 'Vendido',
+        bgColor: '#10b981',
+        textColor: '#ffffff',
+        icon: CheckCircle,
+        lightBg: '#d1fae5',
+        lightText: '#065f46'
+      },
+      'devolucion': {
+        label: 'Devolución',
+        bgColor: '#ef4444',
+        textColor: '#ffffff',
+        icon: XCircle,
+        lightBg: '#fee2e2',
+        lightText: '#991b1b'
+      },
+      'pendiente': {
+        label: 'Pendiente',
+        bgColor: '#f59e0b',
+        textColor: '#ffffff',
+        icon: Package,
+        lightBg: '#fef3c7',
+        lightText: '#92400e'
+      }
+    };
+    
+    return configs[estadoLower] || configs['pendiente'];
+  };
 
   // Efecto para activar loading cuando cambie el cliente seleccionado
   useEffect(() => {
@@ -102,7 +136,7 @@ const Clientes = () => {
 
   // Función para navegar a agregar cliente
   const handleAddClient = () => {
-    navigate('/agregar-cliente'); // Ajusta la ruta según tu configuración
+    navigate('/agregar-cliente');
   };
 
   return (
@@ -164,19 +198,19 @@ const Clientes = () => {
               <div className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 text-sm font-semibold`} style={{color: '#5F8EAD'}}>
                 <div className="flex items-center">
                   <User className="w-4 h-4 mr-2" />
-                  Nombres
-                </div>
-                <div className="flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Email
+                  Nombre
                 </div>
                 <div className="flex items-center">
                   <CreditCard className="w-4 h-4 mr-2" />
-                  DUI
+                  Producto
                 </div>
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
                   Fecha Pedido
+                </div>
+                <div className="flex items-center">
+                  <Package className="w-4 h-4 mr-2" />
+                  Estado
                 </div>
                 {!showDetailView && (
                   <>
@@ -243,61 +277,77 @@ const Clientes = () => {
                   </div>
                 ) : (
                   <div className="space-y-2 pt-4">
-                    {getCurrentPageClients().map((client, index) => (
-                      <div
-                        key={client._id || index}
-                        className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
-                          selectedClient && selectedClient._id === client._id 
-                            ? 'shadow-lg transform scale-[1.02]' 
-                            : 'hover:shadow-md hover:transform hover:scale-[1.01] border-transparent'
-                        }`}
-                        style={{
-                          backgroundColor: selectedClient && selectedClient._id === client._id ? '#5D9646' : '#ffffff',
-                          color: selectedClient && selectedClient._id === client._id ? '#ffffff' : '#374151',
-                          borderColor: selectedClient && selectedClient._id === client._id ? '#5D9646' : 'transparent'
-                        }}
-                        onClick={() => selectClient(client)}
-                      >
-                        <div className="font-semibold flex items-center">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
-                            selectedClient && selectedClient._id === client._id ? 'bg-white bg-opacity-20' : ''
-                          }`} style={{backgroundColor: selectedClient && selectedClient._id === client._id ? 'rgba(255,255,255,0.2)' : '#5F8EAD'}}>
-                            <User className={`w-5 h-5 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-white'}`} />
+                    {getCurrentPageClients().map((client, index) => {
+                      const estadoConfig = getEstadoConfig(client.estado);
+                      const EstadoIcon = estadoConfig.icon;
+                      
+                      return (
+                        <div
+                          key={client._id || index}
+                          className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
+                            selectedClient && selectedClient._id === client._id 
+                              ? 'shadow-lg transform scale-[1.02]' 
+                              : 'hover:shadow-md hover:transform hover:scale-[1.01] border-transparent'
+                          }`}
+                          style={{
+                            backgroundColor: selectedClient && selectedClient._id === client._id ? '#5D9646' : '#ffffff',
+                            color: selectedClient && selectedClient._id === client._id ? '#ffffff' : '#374151',
+                            borderColor: selectedClient && selectedClient._id === client._id ? '#5D9646' : 'transparent'
+                          }}
+                          onClick={() => selectClient(client)}
+                        >
+                          <div className="font-semibold flex items-center">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                              selectedClient && selectedClient._id === client._id ? 'bg-white bg-opacity-20' : ''
+                            }`} style={{backgroundColor: selectedClient && selectedClient._id === client._id ? 'rgba(255,255,255,0.2)' : '#5F8EAD'}}>
+                              <User className={`w-5 h-5 text-white`} />
+                            </div>
+                            <span className="truncate">{client.firstName || client.nombre || 'Sin nombre'}</span>
                           </div>
-                          <span className="truncate">{client.firstName || 'Sin nombre'}</span>
+                          <div className="flex items-center truncate">
+                            <CreditCard className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                            <span className="truncate">{client.producto || 'Sin producto'}</span>
+                          </div>
+                          <div className="flex items-center truncate">
+                            <Calendar className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                            <span className="truncate">
+                              {client.birthDate || client.fechaPedido ? 
+                                new Date(client.birthDate || client.fechaPedido).toLocaleDateString('es-ES') : 
+                                'No disponible'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <span 
+                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
+                              style={{
+                                backgroundColor: selectedClient && selectedClient._id === client._id ? 'rgba(255,255,255,0.2)' : estadoConfig.lightBg,
+                                color: selectedClient && selectedClient._id === client._id ? '#ffffff' : estadoConfig.lightText
+                              }}
+                            >
+                              <EstadoIcon className="w-3 h-3 mr-1" />
+                              {estadoConfig.label}
+                            </span>
+                          </div>
+                          {!showDetailView && (
+                            <>
+                              <div className="flex items-center truncate">
+                                <Phone className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                                <span className="truncate">
+                                  {client.phone || client.telefono || 'No disponible'}
+                                </span>
+                              </div>
+                              <div className="flex items-center truncate">
+                                <MapPin className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
+                                <span className="truncate">
+                                  {client.address || client.dirrecion || 'No disponible'}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
-                        <div className="flex items-center truncate">
-                          <Mail className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                          <span className="truncate">{client.email || 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center truncate">
-                          <CreditCard className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                          <span className="truncate">{client.idNumber || 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center truncate">
-                          <Calendar className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                          <span className="truncate">
-                            {client.birthDate ? new Date(client.birthDate).toLocaleDateString() : 'No disponible'}
-                          </span>
-                        </div>
-                        {!showDetailView && (
-                          <>
-                            <div className="flex items-center truncate">
-                              <Phone className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                              <span className="truncate">
-                                {client.phone ? client.phone.toString() : 'No disponible'}
-                              </span>
-                            </div>
-                            <div className="flex items-center truncate">
-                              <MapPin className={`w-4 h-4 mr-2 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-400'}`} />
-                              <span className="truncate">
-                                {client.address || 'No disponible'}
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -355,11 +405,9 @@ const Clientes = () => {
           {showDetailView && selectedClient && (
             <div className="w-96 bg-white rounded-2xl shadow-2xl relative overflow-hidden flex flex-col h-full">
               {isDetailLoading ? (
-                /* Enhanced Loading Screen with Lottie */
                 <div className="flex-1 flex items-center justify-center relative" 
                      style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b2f 100%)'}}>
                   
-                  {/* Background Animation */}
                   <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-10 left-10 w-20 h-20 rounded-full opacity-10 animate-pulse"
                          style={{backgroundColor: '#5F8EAD', animation: 'float 3s ease-in-out infinite'}}>
@@ -367,13 +415,9 @@ const Clientes = () => {
                     <div className="absolute bottom-10 right-10 w-16 h-16 rounded-full opacity-10 animate-pulse"
                          style={{backgroundColor: '#5D9646', animation: 'float 3s ease-in-out infinite reverse'}}>
                     </div>
-                    <div className="absolute top-1/2 left-4 w-12 h-12 rounded-full opacity-10 animate-pulse"
-                         style={{backgroundColor: '#5F8EAD', animation: 'float 4s ease-in-out infinite'}}>
-                    </div>
                   </div>
 
                   <div className="text-center z-10">
-                    {/* Lottie Animation */}
                     <div className="relative mb-8">
                       <div className="w-40 h-40 mx-auto mb-6 flex items-center justify-center">
                         <Lottie 
@@ -385,7 +429,6 @@ const Clientes = () => {
                       </div>
                     </div>
                     
-                    {/* Enhanced Loading Text */}
                     <div className="space-y-4 mb-8">
                       <h2 className="text-2xl font-bold text-white animate-pulse">
                         Cargando Cliente
@@ -395,7 +438,6 @@ const Clientes = () => {
                       </p>
                     </div>
                     
-                    {/* Advanced Progress Bar */}
                     <div className="w-80 mx-auto">
                       <div className="w-full bg-gray-600 rounded-full h-2 mb-4 overflow-hidden shadow-inner">
                         <div className="h-2 rounded-full relative overflow-hidden"
@@ -404,67 +446,27 @@ const Clientes = () => {
                                width: '100%',
                                animation: 'loading-wave 2.5s ease-in-out infinite'
                              }}>
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40"
-                               style={{animation: 'shimmer 1.5s ease-in-out infinite'}}>
-                          </div>
                         </div>
-                      </div>
-                      
-                      {/* Dynamic Loading Steps */}
-                      <div className="text-sm text-gray-400 animate-pulse">
-                        <span className="inline-block" style={{animation: 'text-fade 3s ease-in-out infinite'}}>
-                          Verificando información del cliente...
-                        </span>
                       </div>
                     </div>
                   </div>
                   
                   <style jsx>{`
                     @keyframes loading-wave {
-                      0% { 
-                        transform: translateX(-100%);
-                        opacity: 0.5;
-                      }
-                      50% { 
-                        transform: translateX(0%);
-                        opacity: 1;
-                      }
-                      100% { 
-                        transform: translateX(100%);
-                        opacity: 0.5;
-                      }
+                      0% { transform: translateX(-100%); opacity: 0.5; }
+                      50% { transform: translateX(0%); opacity: 1; }
+                      100% { transform: translateX(100%); opacity: 0.5; }
                     }
-                    
                     @keyframes float {
-                      0%, 100% {
-                        transform: translateY(0px) scale(1);
-                      }
-                      50% {
-                        transform: translateY(-10px) scale(1.1);
-                      }
-                    }
-                    
-                    @keyframes shimmer {
-                      0% {
-                        transform: translateX(-100%);
-                      }
-                      100% {
-                        transform: translateX(100%);
-                      }
-                    }
-                    
-                    @keyframes text-fade {
-                      0%, 100% { opacity: 0.6; }
-                      50% { opacity: 1; }
+                      0%, 100% { transform: translateY(0px) scale(1); }
+                      50% { transform: translateY(-10px) scale(1.1); }
                     }
                   `}</style>
                 </div>
               ) : (
                 <>
-                  {/* Background Pattern */}
                   <div className="absolute top-0 right-0 w-32 h-32 opacity-5" style={{backgroundColor: '#5F8EAD', borderRadius: '0 0 0 100%'}}></div>
                   
-                  {/* Header - Fijo */}
                   <div className="flex items-center justify-between p-8 pb-4 flex-shrink-0">
                     <div className="flex items-center">
                       <button
@@ -477,9 +479,7 @@ const Clientes = () => {
                     </div>
                   </div>
 
-                  {/* Contenido Scrolleable */}
                   <div className="flex-1 overflow-y-auto px-8 pb-8">
-                    {/* Profile Section */}
                     <div className="text-center mb-10">
                       <div className="relative inline-block">
                         <div className="w-28 h-28 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg" style={{background: 'linear-gradient(135deg, #5F8EAD 0%, #4a7ba7 100%)'}}>
@@ -487,8 +487,26 @@ const Clientes = () => {
                         </div>
                       </div>
                       <h3 className="font-bold text-xl mb-2 text-gray-900">
-                        {selectedClient.firstName || 'Sin nombre'}
+                        {selectedClient.firstName || selectedClient.nombre || 'Sin nombre'}
                       </h3>
+                      <p className="text-sm text-gray-500 mb-3">
+                        {selectedClient.producto || 'Sin producto'}
+                      </p>
+                      
+                      {(() => {
+                        const estadoConfig = getEstadoConfig(selectedClient.estado);
+                        const EstadoIcon = estadoConfig.icon;
+                        return (
+                          <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-md mb-4"
+                               style={{
+                                 backgroundColor: estadoConfig.bgColor,
+                                 color: estadoConfig.textColor
+                               }}>
+                            <EstadoIcon className="w-4 h-4 mr-2" />
+                            {estadoConfig.label}
+                          </div>
+                        );
+                      })()}
                       
                       <div className="flex justify-center space-x-3">
                         <button className="p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-md" style={{backgroundColor: '#5D9646'}}>
@@ -500,9 +518,7 @@ const Clientes = () => {
                       </div>
                     </div>
 
-                    {/* Information Cards */}
                     <div className="space-y-6">
-                      {/* Información del Pedido */}
                       <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                         <div className="flex items-center space-x-3 mb-4">
                           <div className="p-2 rounded-lg" style={{backgroundColor: '#5F8EAD'}}>
@@ -522,8 +538,12 @@ const Clientes = () => {
                             <div className="text-sm font-medium text-gray-700 mb-1">Fecha del Pedido</div>
                             <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
                               <Calendar className="w-4 h-4 mr-2" style={{color: '#5F8EAD'}} />
-                              {selectedClient.birthDate ? 
-                                new Date(selectedClient.birthDate).toLocaleDateString() : 
+                              {selectedClient.birthDate || selectedClient.fechaPedido ? 
+                                new Date(selectedClient.birthDate || selectedClient.fechaPedido).toLocaleDateString('es-ES', {
+                                  day: '2-digit',
+                                  month: '2-digit', 
+                                  year: 'numeric'
+                                }) : 
                                 'No disponible'
                               }
                             </div>
@@ -531,7 +551,6 @@ const Clientes = () => {
                         </div>
                       </div>
 
-                      {/* Información de Contacto */}
                       <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
                         <div className="flex items-center space-x-3 mb-4">
                           <div className="p-2 rounded-lg" style={{backgroundColor: '#5D9646'}}>
@@ -545,14 +564,14 @@ const Clientes = () => {
                             <div className="text-sm font-medium text-gray-700 mb-1">Teléfono</div>
                             <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
                               <Phone className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
-                              {selectedClient.phone ? selectedClient.phone.toString() : 'No disponible'}
+                              {selectedClient.phone || selectedClient.telefono || 'No disponible'}
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-700 mb-1">Dirección</div>
+                            <div className="text-sm font-medium text-gray-700 mb-1">Dirección de Entrega</div>
                             <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border flex items-center">
                               <MapPin className="w-4 h-4 mr-2" style={{color: '#5D9646'}} />
-                              {selectedClient.address || 'No disponible'}
+                              {selectedClient.address || selectedClient.dirrecion || 'No disponible'}
                             </div>
                           </div>
                         </div>
