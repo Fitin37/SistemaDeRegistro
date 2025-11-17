@@ -33,9 +33,9 @@ const Clientes = () => {
   // Estado para la animación de carga del panel de detalles
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   
-  // Estados para el menú de acciones
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const menuRef = useRef(null);
+  // Estados para el menú de acciones en el panel
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const actionsMenuRef = useRef(null);
   
   // Estados para el modal de edición
   const [showEditModal, setShowEditModal] = useState(false);
@@ -86,8 +86,8 @@ const Clientes = () => {
   // Cerrar menú al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target)) {
+        setShowActionsMenu(false);
       }
     };
     
@@ -96,8 +96,7 @@ const Clientes = () => {
   }, []);
   
   // Función para abrir modal de edición
-  const handleEdit = (client, e) => {
-    e.stopPropagation();
+  const handleEdit = (client) => {
     setEditingClient(client);
     setEditFormData({
       nombre: client.firstName || client.nombre || '',
@@ -108,7 +107,7 @@ const Clientes = () => {
       estado: client.estado || 'pendiente'
     });
     setShowEditModal(true);
-    setOpenMenuId(null);
+    setShowActionsMenu(false);
   };
   
   // Función para manejar cambios en el formulario de edición
@@ -175,9 +174,8 @@ const Clientes = () => {
   };
   
   // Función para eliminar cliente
-  const handleDelete = async (client, e) => {
-    e.stopPropagation();
-    setOpenMenuId(null);
+  const handleDelete = async (client) => {
+    setShowActionsMenu(false);
     
     const result = await Swal.fire({
       title: '¿Estás seguro?',
@@ -210,6 +208,7 @@ const Clientes = () => {
           confirmButtonColor: '#5F8EAD',
           timer: 2000
         });
+        closeDetailView();
       } else {
         Swal.fire({
           icon: 'error',
@@ -219,12 +218,6 @@ const Clientes = () => {
         });
       }
     }
-  };
-  
-  // Toggle menú de acciones
-  const toggleMenu = (clientId, e) => {
-    e.stopPropagation();
-    setOpenMenuId(openMenuId === clientId ? null : clientId);
   };
 
   // Efecto para activar loading cuando cambie el cliente seleccionado
@@ -356,9 +349,9 @@ const Clientes = () => {
               </div>
             </div>
 
-            {/* Table Header */}
+            {/* Table Header - Sin columna de Acciones */}
             <div className="px-8 py-4 border-b-2" style={{borderColor: '#5F8EAD', backgroundColor: '#f8fafc'}}>
-              <div className={`grid ${showDetailView ? 'grid-cols-5' : 'grid-cols-7'} gap-6 text-sm font-semibold`} style={{color: '#5F8EAD'}}>
+              <div className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 text-sm font-semibold`} style={{color: '#5F8EAD'}}>
                 <div className="flex items-center">
                   <User className="w-4 h-4 mr-2" />
                   Nombre
@@ -387,13 +380,10 @@ const Clientes = () => {
                     </div>
                   </>
                 )}
-                <div className="flex items-center justify-center">
-                  Acciones
-                </div>
               </div>
             </div>
 
-            {/* Table Content */}
+            {/* Table Content - Sin columna de Acciones */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-8 pt-0">
                 {loading ? (
@@ -450,7 +440,7 @@ const Clientes = () => {
                       return (
                         <div
                           key={client._id || index}
-                          className={`grid ${showDetailView ? 'grid-cols-5' : 'grid-cols-7'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
+                          className={`grid ${showDetailView ? 'grid-cols-4' : 'grid-cols-6'} gap-6 py-4 px-6 rounded-xl cursor-pointer transition-all duration-200 border-2 ${
                             selectedClient && selectedClient._id === client._id 
                               ? 'shadow-lg transform scale-[1.02]' 
                               : 'hover:shadow-md hover:transform hover:scale-[1.01] border-transparent'
@@ -511,37 +501,6 @@ const Clientes = () => {
                               </div>
                             </>
                           )}
-                          <div className="flex items-center justify-center relative" ref={openMenuId === client._id ? menuRef : null}>
-                            <button
-                              onClick={(e) => toggleMenu(client._id, e)}
-                              className={`p-2 rounded-lg transition-colors ${
-                                selectedClient && selectedClient._id === client._id 
-                                  ? 'hover:bg-white hover:bg-opacity-20' 
-                                  : 'hover:bg-gray-100'
-                              }`}
-                            >
-                              <MoreVertical className={`w-5 h-5 ${selectedClient && selectedClient._id === client._id ? 'text-white' : 'text-gray-600'}`} />
-                            </button>
-                            
-                            {openMenuId === client._id && (
-                              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
-                                <button
-                                  onClick={(e) => handleEdit(client, e)}
-                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 text-gray-700 transition-colors"
-                                >
-                                  <Edit2 className="w-4 h-4 text-blue-600" />
-                                  <span>Editar</span>
-                                </button>
-                                <button
-                                  onClick={(e) => handleDelete(client, e)}
-                                  className="w-full px-4 py-3 text-left hover:bg-red-50 flex items-center space-x-3 text-red-600 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  <span>Eliminar</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
                         </div>
                       );
                     })}
@@ -664,6 +623,7 @@ const Clientes = () => {
                 <>
                   <div className="absolute top-0 right-0 w-32 h-32 opacity-5" style={{backgroundColor: '#5F8EAD', borderRadius: '0 0 0 100%'}}></div>
                   
+                  {/* Header con botón de acciones */}
                   <div className="flex items-center justify-between p-8 pb-4 flex-shrink-0">
                     <div className="flex items-center">
                       <button
@@ -673,6 +633,35 @@ const Clientes = () => {
                         <ArrowLeft className="w-5 h-5 text-gray-600" />
                       </button>
                       <h2 className="text-xl font-semibold text-gray-900">Detalles del Cliente</h2>
+                    </div>
+                    
+                    {/* Botón de menú de acciones */}
+                    <div className="relative" ref={actionsMenuRef}>
+                      <button
+                        onClick={() => setShowActionsMenu(!showActionsMenu)}
+                        className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
+                      >
+                        <MoreVertical className="w-5 h-5 text-gray-600" />
+                      </button>
+                      
+                      {showActionsMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                          <button
+                            onClick={() => handleEdit(selectedClient)}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 text-gray-700 transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4 text-blue-600" />
+                            <span>Editar</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(selectedClient)}
+                            className="w-full px-4 py-3 text-left hover:bg-red-50 flex items-center space-x-3 text-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Eliminar</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
