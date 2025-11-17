@@ -220,9 +220,9 @@ const Clientes = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex h-[calc(100vh-4rem)]">
+    <div className="min-h-screen w-full" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
+      <div className="w-full px-6 py-8">
+        <div className="flex h-[calc(100vh-4rem)] w-full">
           {/* Panel Principal */}
           <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl ${showDetailView ? 'mr-6' : ''} flex flex-col overflow-hidden`}>
             
