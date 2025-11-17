@@ -1,218 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MoreHorizontal, User, Phone, Package, Calendar, MapPin, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, MoreHorizontal, User, Phone, Package, Calendar, MapPin, ShoppingBag, Shield } from 'lucide-react';
+import Lottie from 'lottie-react';
 
 const ClienteDetailPanel = ({ 
-  selectedEmpleados: selectedCliente, // Mantener compatibilidad con el hook
+  selectedEmpleados: selectedCliente,
   closeDetailView, 
-  handleOptionsClick 
+  handleOptionsClick,
+  lottieAnimationData // Pasa tu JSON de Lottie como prop
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Activar loading cada vez que cambie el cliente seleccionado
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2500);
+    }, 2000); // Reducido a 2 segundos
 
     return () => clearTimeout(timer);
-  }, [selectedCliente]); // Se ejecuta cada vez que cambia selectedCliente
+  }, [selectedCliente]);
 
   if (isLoading) {
     return (
       <div className="w-96 bg-white rounded-2xl shadow-2xl relative overflow-hidden flex flex-col h-full">
-        {/* Enhanced Loading Screen */}
         <div className="flex-1 flex items-center justify-center relative" 
              style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b2f 100%)'}}>
           
-          {/* Background Animation */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-10 left-10 w-20 h-20 rounded-full opacity-10 animate-pulse floating-animation"
-                 style={{backgroundColor: '#5F8EAD'}}>
-            </div>
-            <div className="absolute bottom-10 right-10 w-16 h-16 rounded-full opacity-10 animate-pulse floating-animation-reverse"
-                 style={{backgroundColor: '#5D9646'}}>
-            </div>
-            <div className="absolute top-1/2 left-4 w-12 h-12 rounded-full opacity-10 animate-pulse floating-animation-slow"
-                 style={{backgroundColor: '#5F8EAD'}}>
-            </div>
-          </div>
-
           <div className="text-center z-10">
-            {/* Enhanced Profile Loading Animation */}
-            <div className="relative mb-8">
-              <div className="w-28 h-28 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-2xl overflow-hidden relative" 
-                   style={{background: 'linear-gradient(135deg, #5F8EAD 0%, #5D9646 100%)'}}>
-                <User className="w-14 h-14 text-white animate-pulse" />
-                
-                {/* Multiple rotating borders */}
-                <div className="absolute inset-0 rounded-2xl border-4 border-transparent spinning-border"
-                     style={{
-                       borderTopColor: '#FFFFFF',
-                       borderRightColor: 'rgba(255,255,255,0.3)'
-                     }}>
+            {/* Lottie Animation */}
+            <div className="w-64 h-64 mx-auto mb-6">
+              {lottieAnimationData ? (
+                <Lottie 
+                  animationData={lottieAnimationData}
+                  loop={true}
+                  autoplay={true}
+                />
+              ) : (
+                // Fallback si no hay Lottie
+                <div className="w-28 h-28 rounded-2xl mx-auto flex items-center justify-center shadow-2xl" 
+                     style={{background: 'linear-gradient(135deg, #5F8EAD 0%, #5D9646 100%)'}}>
+                  <User className="w-14 h-14 text-white animate-pulse" />
                 </div>
-                <div className="absolute inset-2 rounded-xl border-2 border-transparent spinning-border-reverse"
-                     style={{
-                       borderBottomColor: '#FFFFFF',
-                       borderLeftColor: 'rgba(255,255,255,0.2)'
-                     }}>
-                </div>
-              </div>
+              )}
             </div>
             
-            {/* Enhanced Loading Text */}
-            <div className="space-y-4 mb-8">
-              <h2 className="text-2xl font-bold text-white animate-pulse">
+            {/* Loading Text */}
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-white">
                 Cargando Perfil
               </h2>
-              <p className="text-gray-300 text-lg">
-                Preparando información del cliente
+              <p className="text-gray-300 text-sm">
+                Preparando información del cliente...
               </p>
-            </div>
-
-            {/* Modern Loading Dots with Ripple Effect */}
-            <div className="flex justify-center space-x-3 mb-8">
-              <div className="relative">
-                <div className="w-4 h-4 rounded-full bounce-custom" 
-                     style={{backgroundColor: '#5F8EAD', animationDelay: '0ms'}}>
-                </div>
-                <div className="absolute inset-0 w-4 h-4 rounded-full animate-ping" 
-                     style={{backgroundColor: '#5F8EAD', opacity: '0.3'}}>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="w-4 h-4 rounded-full bounce-custom" 
-                     style={{backgroundColor: '#FFFFFF', animationDelay: '0.2s'}}>
-                </div>
-                <div className="absolute inset-0 w-4 h-4 rounded-full animate-ping" 
-                     style={{backgroundColor: '#FFFFFF', opacity: '0.3', animationDelay: '0.2s'}}>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="w-4 h-4 rounded-full bounce-custom" 
-                     style={{backgroundColor: '#5D9646', animationDelay: '0.4s'}}>
-                </div>
-                <div className="absolute inset-0 w-4 h-4 rounded-full animate-ping" 
-                     style={{backgroundColor: '#5D9646', opacity: '0.3', animationDelay: '0.4s'}}>
-                </div>
-              </div>
-            </div>
-            
-            {/* Advanced Progress Bar */}
-            <div className="w-80 mx-auto">
-              <div className="w-full bg-gray-600 rounded-full h-2 mb-4 overflow-hidden shadow-inner">
-                <div className="h-2 rounded-full relative overflow-hidden loading-wave"
-                     style={{
-                       background: 'linear-gradient(90deg, #5F8EAD 0%, #5D9646 50%, #5F8EAD 100%)',
-                       width: '100%'
-                     }}>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40 shimmer-effect">
-                  </div>
-                </div>
-              </div>
-              
-              {/* Dynamic Loading Steps */}
-              <div className="text-sm text-gray-400 animate-pulse">
-                <span className="inline-block text-fade">
-                  Verificando información del cliente...
-                </span>
-              </div>
             </div>
           </div>
         </div>
-        
-        <style>{`
-          .loading-wave {
-            animation: loading-wave 2.5s ease-in-out infinite;
-          }
-          
-          .bounce-custom {
-            animation: bounce-custom 1.6s ease-in-out infinite both;
-          }
-          
-          .floating-animation {
-            animation: float 3s ease-in-out infinite;
-          }
-          
-          .floating-animation-reverse {
-            animation: float 3s ease-in-out infinite reverse;
-          }
-          
-          .floating-animation-slow {
-            animation: float 4s ease-in-out infinite;
-          }
-          
-          .shimmer-effect {
-            animation: shimmer 1.5s ease-in-out infinite;
-          }
-          
-          .text-fade {
-            animation: text-fade 3s ease-in-out infinite;
-          }
-          
-          .spinning-border {
-            animation: spin 2s linear infinite;
-          }
-          
-          .spinning-border-reverse {
-            animation: spin 3s linear infinite reverse;
-          }
-          
-          @keyframes loading-wave {
-            0% { 
-              transform: translateX(-100%);
-              opacity: 0.5;
-            }
-            50% { 
-              transform: translateX(0%);
-              opacity: 1;
-            }
-            100% { 
-              transform: translateX(100%);
-              opacity: 0.5;
-            }
-          }
-          
-          @keyframes bounce-custom {
-            0%, 80%, 100% {
-              transform: scale(0.8) translateY(0);
-              opacity: 0.5;
-            } 
-            40% {
-              transform: scale(1.2) translateY(-10px);
-              opacity: 1;
-            }
-          }
-          
-          @keyframes float {
-            0%, 100% {
-              transform: translateY(0px) scale(1);
-            }
-            50% {
-              transform: translateY(-10px) scale(1.1);
-            }
-          }
-          
-          @keyframes shimmer {
-            0% {
-              transform: translateX(-100%);
-            }
-            100% {
-              transform: translateX(100%);
-            }
-          }
-          
-          @keyframes text-fade {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-          }
-          
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -336,11 +177,11 @@ const ClienteDetailPanel = ({
             </div>
           </div>
 
-          {/* Información Adicional */}
+          {/* Información Adicional con Estado */}
           <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 rounded-lg" style={{backgroundColor: '#8B5FBF'}}>
-                <User className="w-5 h-5 text-white" />
+                <Shield className="w-5 h-5 text-white" />
               </div>
               <span className="font-semibold text-gray-900">Información del Sistema</span>
             </div>
@@ -355,9 +196,29 @@ const ClienteDetailPanel = ({
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-1">Estado</div>
                 <div className="flex items-center">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    Activo
+                  <span 
+                    className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-semibold ${
+                      selectedCliente?.estado === 'Activo' || selectedCliente?.estado === 'activo'
+                        ? 'bg-green-100 text-green-800'
+                        : selectedCliente?.estado === 'Inactivo' || selectedCliente?.estado === 'inactivo'
+                          ? 'bg-gray-100 text-gray-800'
+                          : selectedCliente?.estado === 'Pendiente' || selectedCliente?.estado === 'pendiente'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
+                    <div 
+                      className={`w-2 h-2 rounded-full mr-2 ${
+                        selectedCliente?.estado === 'Activo' || selectedCliente?.estado === 'activo'
+                          ? 'bg-green-400'
+                          : selectedCliente?.estado === 'Inactivo' || selectedCliente?.estado === 'inactivo'
+                            ? 'bg-gray-400'
+                            : selectedCliente?.estado === 'Pendiente' || selectedCliente?.estado === 'pendiente'
+                              ? 'bg-yellow-400'
+                              : 'bg-blue-400'
+                      }`}
+                    ></div>
+                    {selectedCliente?.estado || 'Sin estado'}
                   </span>
                 </div>
               </div>

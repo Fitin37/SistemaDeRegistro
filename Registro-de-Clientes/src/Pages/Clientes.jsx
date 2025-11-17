@@ -10,6 +10,7 @@ import ClienteDetailPanel from '../hooks/Empleados/EmployeDetailsPanel';
 import EmployeeHeader from '../hooks/Empleados/EmployeeHeader';
 import ClienteRow from '../hooks/Empleados/EmployeeRow';
 import EmployeeTableHeader from '../hooks/Empleados/EmployeeTableHeader';
+import lottieAnimation from '../assets/Sandy Loading.json';
 
 const Clientes = () => {
   const navigate = useNavigate();
@@ -357,6 +358,7 @@ const Clientes = () => {
                 selectedEmpleados={selectedClient}
                 closeDetailView={closeDetailView}
                 handleOptionsClick={handleOptionsClick}
+                lottieAnimationData={lottieAnimation}
               />
               
               {/* Menú de acciones flotante sobre el panel */}
