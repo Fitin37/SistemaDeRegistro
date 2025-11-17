@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import useClients from '../hooks/useDataCliente';
 import Swal from 'sweetalert2';
 
-// Importar componentes de clientes
+// Importar componentes de clientes (usando las rutas correctas de tu proyecto)
 import EditEmployeeModal from '../hooks/Empleados/EditEmployeeModal';
-import EmployeeDetailsPanel from '../hooks/Empleados/EmployeDetailsPanel';
+import ClienteDetailPanel from '../hooks/Empleados/EmployeDetailsPanel';
 import EmployeeHeader from '../hooks/Empleados/EmployeeHeader';
-import EmployeeRow from '../hooks/Empleados/EmployeeRow';
+import ClienteRow from '../hooks/Empleados/EmployeeRow';
 import EmployeeTableHeader from '../hooks/Empleados/EmployeeTableHeader';
 
 const Clientes = () => {
@@ -58,6 +58,7 @@ const Clientes = () => {
   
   // Función para abrir modal de edición
   const handleEdit = (client) => {
+    console.log('📝 Abriendo modal de edición para:', client);
     setEditingClient(client);
     setShowEditModal(true);
     setShowActionsMenu(false);
@@ -103,6 +104,7 @@ const Clientes = () => {
   
   // Función para eliminar cliente
   const handleDelete = async (client) => {
+    console.log('🗑️ Intentando eliminar cliente:', client);
     setShowActionsMenu(false);
     
     const result = await Swal.fire({
@@ -150,6 +152,7 @@ const Clientes = () => {
 
   // Manejar click en opciones del panel de detalles
   const handleOptionsClick = () => {
+    console.log('⚙️ Toggle menú de opciones');
     setShowActionsMenu(!showActionsMenu);
   };
 
@@ -223,7 +226,7 @@ const Clientes = () => {
           {/* Panel Principal */}
           <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl ${showDetailView ? 'mr-6' : ''} flex flex-col overflow-hidden`}>
             
-            {/* Header usando componente */}
+            {/* Header usando componente EmployeeHeader */}
             <EmployeeHeader 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -233,7 +236,7 @@ const Clientes = () => {
               handleContinue={handleAddClient}
             />
 
-            {/* Table Header usando componente */}
+            {/* Table Header usando componente EmployeeTableHeader */}
             <EmployeeTableHeader showDetailView={showDetailView} />
 
             {/* Table Content */}
@@ -284,6 +287,7 @@ const Clientes = () => {
                   </div>
                 ) : (
                   <div className="space-y-2 pt-4">
+                    {/* Usando componente ClienteRow para cada fila */}
                     {getCurrentPageClients().map((client, index) => (
                       <ClienteRow
                         key={client._id || index}
@@ -298,7 +302,7 @@ const Clientes = () => {
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Footer con paginación */}
             <div className="p-8 pt-4 border-t border-gray-100" style={{backgroundColor: '#f8fafc'}}>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
@@ -346,7 +350,7 @@ const Clientes = () => {
             </div>
           </div>
 
-          {/* Panel de Detalles usando componente */}
+          {/* Panel de Detalles usando componente ClienteDetailPanel */}
           {showDetailView && selectedClient && (
             <div className="relative">
               <ClienteDetailPanel
@@ -355,7 +359,7 @@ const Clientes = () => {
                 handleOptionsClick={handleOptionsClick}
               />
               
-              {/* Menú de acciones flotante */}
+              {/* Menú de acciones flotante sobre el panel */}
               {showActionsMenu && (
                 <div 
                   ref={actionsMenuRef}
@@ -382,10 +386,14 @@ const Clientes = () => {
         </div>
       </div>
       
-      {/* Modal de Edición usando componente - CON ESTADO */}
-      <EditClienteModal
+      {/* Modal de Edición usando componente EditEmployeeModal - CON ESTADO */}
+      <EditEmployeeModal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={() => {
+          console.log('❌ Cerrando modal de edición');
+          setShowEditModal(false);
+          setEditingClient(null);
+        }}
         onSave={handleSaveEdit}
         employee={editingClient}
         uploading={uploading}
