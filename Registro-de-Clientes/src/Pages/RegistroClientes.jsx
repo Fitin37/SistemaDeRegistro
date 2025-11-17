@@ -22,7 +22,8 @@ const AgregarCliente = () => {
     producto: '',
     fechaPedido: '',
     telefono: '',
-    dirrecion: ''
+    dirrecion: '',
+    estado: 'pendiente' // Estado automático
   });
 
   const [errors, setErrors] = useState({});
@@ -125,7 +126,8 @@ const AgregarCliente = () => {
         producto: formData.producto.trim(),
         fechaPedido: formData.fechaPedido,
         telefono: formData.telefono.trim(),
-        dirrecion: formData.dirrecion.trim()
+        dirrecion: formData.dirrecion.trim(),
+        estado: 'pendiente' // Estado automático al crear
       };
 
       console.log('=== DATOS A ENVIAR ===', dataToSend);
@@ -155,7 +157,8 @@ const AgregarCliente = () => {
           producto: '',
           fechaPedido: '',
           telefono: '',
-          dirrecion: ''
+          dirrecion: '',
+          estado: 'pendiente' // Mantener estado por defecto
         });
         setErrors({});
       }
