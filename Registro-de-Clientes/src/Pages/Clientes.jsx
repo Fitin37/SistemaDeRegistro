@@ -220,11 +220,11 @@ const Clientes = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+    <div className="min-h-screen p-6" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
       <div className="max-w-7xl mx-auto">
         <div className="flex gap-6 h-[calc(100vh-3rem)]">
           {/* Panel Principal */}
-          <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden`}>
+          <div className={`${showDetailView ? 'flex-1' : 'w-full'} rounded-2xl shadow-2xl flex flex-col overflow-hidden`} style={{backgroundColor: 'transparent'}}>
             
             {/* Header usando componente EmployeeHeader */}
             <EmployeeHeader 
