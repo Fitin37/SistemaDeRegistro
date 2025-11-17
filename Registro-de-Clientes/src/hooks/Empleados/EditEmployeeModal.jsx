@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Calendar, CheckCircle } from 'lucide-react';
+import { Package, Calendar, CheckCircle, Shield } from 'lucide-react';
 
 const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploading, includeEstado = false }) => {
   const [formData, setFormData] = useState({
@@ -48,80 +48,48 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
     }
   }, [cliente, isOpen]);
 
-  // USEEFFECT ADICIONAL - Sincronizar con actualizaciones externas
-  useEffect(() => {
-    if (cliente && isOpen && !uploading) {
-      console.log('🔄 Sincronizando modal con datos actualizados del cliente:', cliente);
-      
-      const formatDateForInput = (dateString) => {
-        if (!dateString) return '';
-        try {
-          const date = new Date(dateString);
-          return date.toISOString().split('T')[0];
-        } catch (error) {
-          return '';
-        }
-      };
-      
-      setFormData({
-        nombre: cliente.nombre || '',
-        producto: cliente.producto || '',
-        telefono: cliente.telefono || '',
-        dirrecion: cliente.dirrecion || '',
-        fechaPedido: formatDateForInput(cliente.fechaPedido),
-        estado: cliente.estado || 'pendiente'
-      });
-    }
-  }, [cliente, isOpen, uploading]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`📝 Campo ${name} cambiado a:`, value);
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  // FUNCIÓN HANDLESAVE OPTIMIZADA PARA CLIENTES
+  // FUNCIÓN HANDLESAVE OPTIMIZADA
   const handleSave = () => {
     console.log('💾 Preparando datos de cliente para guardar...');
     console.log('📋 FormData actual:', formData);
     console.log('👤 Cliente original:', cliente);
     
-    // Crear objeto JSON (no FormData ya que no hay imágenes)
+    // Crear objeto JSON
     const dataToSend = {};
     
-    // Solo agregar campos que han cambiado o que tienen valor
+    // Agregar todos los campos que tienen valor
     if (formData.nombre && formData.nombre.trim()) {
       dataToSend.nombre = formData.nombre.trim();
-      console.log('✅ Agregando nombre:', formData.nombre.trim());
     }
     if (formData.producto && formData.producto.trim()) {
       dataToSend.producto = formData.producto.trim();
-      console.log('✅ Agregando producto:', formData.producto.trim());
     }
     if (formData.telefono && formData.telefono.trim()) {
       dataToSend.telefono = formData.telefono.trim();
-      console.log('✅ Agregando teléfono:', formData.telefono.trim());
     }
     if (formData.dirrecion && formData.dirrecion.trim()) {
       dataToSend.dirrecion = formData.dirrecion.trim();
-      console.log('✅ Agregando dirección:', formData.dirrecion.trim());
     }
     if (formData.fechaPedido) {
-      // Convertir fecha a formato ISO
       const fechaISO = new Date(formData.fechaPedido).toISOString();
       dataToSend.fechaPedido = fechaISO;
-      console.log('✅ Agregando fecha de pedido:', fechaISO);
     }
     
-    // Agregar estado si está habilitado
-    if (includeEstado && formData.estado) {
+    // IMPORTANTE: Siempre incluir el estado si está habilitado
+    if (includeEstado) {
       dataToSend.estado = formData.estado;
       console.log('✅ Agregando estado:', formData.estado);
     }
     
-    // Debug: mostrar todos los campos que se van a enviar
     console.log('📤 Datos a enviar:', dataToSend);
     
     // Verificar que se está enviando algo
@@ -222,7 +190,7 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                     value={formData.nombre}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
-                    placeholder={cliente?.nombre || "Nombre del cliente"}
+                    placeholder="Nombre del cliente"
                   />
                 </div>
 
@@ -236,7 +204,7 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                     value={formData.telefono}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
-                    placeholder={cliente?.telefono || "7533-4567"}
+                    placeholder="7533-4567"
                   />
                 </div>
               </div>
@@ -260,7 +228,7 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                     value={formData.producto}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
-                    placeholder={cliente?.producto || "Nombre del producto"}
+                    placeholder="Nombre del producto"
                   />
                 </div>
 
@@ -278,10 +246,11 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                     />
                   </div>
 
-                  {/* Campo de Estado (solo si includeEstado es true) */}
+                  {/* Campo de Estado */}
                   {includeEstado && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Shield className="w-4 h-4 inline mr-1" />
                         Estado del Pedido
                       </label>
                       <select
@@ -291,6 +260,8 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
                       >
                         <option value="pendiente">🟡 Pendiente</option>
+                        <option value="activo">🟢 Activo</option>
+                        <option value="inactivo">⚪ Inactivo</option>
                         <option value="vendido">✅ Vendido</option>
                         <option value="devolucion">❌ Devolución</option>
                       </select>
@@ -316,7 +287,7 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                   onChange={handleInputChange}
                   rows="3"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white resize-none"
-                  placeholder={cliente?.dirrecion || "Dirección completa del cliente"}
+                  placeholder="Dirección completa del cliente"
                 />
               </div>
             </div>

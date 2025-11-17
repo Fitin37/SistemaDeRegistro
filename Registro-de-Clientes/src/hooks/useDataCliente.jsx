@@ -41,7 +41,6 @@ const useDataCliente = () => {
       
       console.log('📡 Status de la respuesta:', response.status);
       console.log('📋 Datos recibidos completos:', response.data);
-      console.log('📋 Tipo de datos recibidos:', typeof response.data);
       
       const clientsData = response.data;
       
@@ -49,42 +48,24 @@ const useDataCliente = () => {
       let clientsArray = [];
       
       if (Array.isArray(clientsData)) {
-        // Si la respuesta es directamente un array
         clientsArray = clientsData;
-        console.log('✅ Datos son un array directo');
       } else if (clientsData && clientsData.data && Array.isArray(clientsData.data.clientes)) {
-        // Tu API devuelve: { data: { clientes: [...] } }
         clientsArray = clientsData.data.clientes;
-        console.log('✅ Datos encontrados en data.clientes');
       } else if (clientsData && Array.isArray(clientsData.clientes)) {
-        // Si está directamente en clientes
         clientsArray = clientsData.clientes;
-        console.log('✅ Datos encontrados en clientes');
       } else if (clientsData && Array.isArray(clientsData.data)) {
-        // Si está en data como array
         clientsArray = clientsData.data;
-        console.log('✅ Datos encontrados en data');
       } else {
         console.warn('⚠️ Formato de datos no esperado:', clientsData);
-        console.warn('⚠️ Estructura recibida:', Object.keys(clientsData || {}));
         throw new Error('Formato de datos no válido');
       }
 
       console.log(`📊 Cantidad de clientes encontrados: ${clientsArray.length}`);
-      
-      if (clientsArray.length === 0) {
-        console.log('⚠️ No se encontraron clientes en la respuesta');
-      } else {
-        console.log('📋 Primeros clientes:', clientsArray.slice(0, 2));
-      }
 
-      // Normalizar los datos de clientes para que coincidan con tu esquema de Render
+      // Normalizar los datos de clientes
       const normalizedClients = clientsArray.map((client, index) => {
-        console.log(`🔄 Normalizando cliente ${index + 1}:`, client);
-        
         return {
           ...client,
-          // Mapear campos del backend de Render a tu frontend
           firstName: client.nombre || client.firstName || client.firtsName || '',
           lastName: client.lastName || '',
           email: client.email || '',
@@ -93,7 +74,7 @@ const useDataCliente = () => {
           phone: client.telefono || client.phone || '',
           address: client.dirrecion || client.address || '',
           producto: client.producto || '',
-          estado: client.estado || 'pendiente', // Agregar estado con valor por defecto
+          estado: client.estado || 'pendiente',
           _id: client._id || client.id || `temp-${index}`
         };
       });
@@ -104,10 +85,7 @@ const useDataCliente = () => {
       
     } catch (error) {
       console.error('❌ Error detallado:', error);
-      console.error('❌ Tipo de error:', error.name);
-      console.error('❌ Mensaje de error:', error.message);
       
-      // Verificar si es un error de red
       if (error.message.includes('Network') || error.code === 'ERR_NETWORK') {
         setError('No se puede conectar al servidor. Verifica que esté ejecutándose en https://sistemaderegistro2.onrender.com');
       } else if (error.response) {
@@ -118,7 +96,77 @@ const useDataCliente = () => {
       setClients([]);
     } finally {
       setLoading(false);
-      console.log('🏁 Carga de clientes finalizada');
+    }
+  };
+
+  // Función para actualizar un cliente - CORREGIDA
+  const updateClient = async (clientId, updateData) => {
+    try {
+      console.log(`📝 Actualizando cliente ${clientId}:`, updateData);
+      
+      // Mapear datos del frontend al formato del backend
+      const dataToSend = {};
+      
+      if (updateData.nombre) dataToSend.nombre = updateData.nombre;
+      if (updateData.producto) dataToSend.producto = updateData.producto;
+      if (updateData.fechaPedido) dataToSend.fechaPedido = updateData.fechaPedido;
+      if (updateData.telefono) dataToSend.telefono = updateData.telefono;
+      if (updateData.dirrecion) dataToSend.dirrecion = updateData.dirrecion;
+      if (updateData.estado) dataToSend.estado = updateData.estado; // ← AGREGAR ESTADO
+      
+      console.log('📤 Datos a enviar al servidor:', dataToSend);
+      
+      const response = await axios.put(`${API_URL}/clientes/${clientId}`, dataToSend, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      });
+      
+      console.log('✅ Respuesta del servidor:', response.data);
+      
+      // Obtener los datos actualizados del servidor
+      const updatedClientData = response.data.cliente || response.data.data || response.data;
+      
+      // Normalizar el cliente actualizado
+      const updatedClient = {
+        ...updatedClientData,
+        firstName: updatedClientData.nombre || updatedClientData.firstName || '',
+        lastName: updatedClientData.lastName || '',
+        email: updatedClientData.email || '',
+        idNumber: updatedClientData.idNumber || '',
+        birthDate: updatedClientData.fechaPedido || updatedClientData.birthDate || null,
+        phone: updatedClientData.telefono || updatedClientData.phone || '',
+        address: updatedClientData.dirrecion || updatedClientData.address || '',
+        producto: updatedClientData.producto || '',
+        estado: updatedClientData.estado || 'pendiente', // ← INCLUIR ESTADO
+        _id: updatedClientData._id || clientId
+      };
+      
+      console.log('🔄 Cliente normalizado:', updatedClient);
+      
+      // Actualizar el array de clientes
+      setClients(prev => 
+        Array.isArray(prev) 
+          ? prev.map(client => client._id === clientId ? updatedClient : client)
+          : [updatedClient]
+      );
+      
+      // IMPORTANTE: Actualizar el cliente seleccionado inmediatamente
+      if (selectedClient && selectedClient._id === clientId) {
+        console.log('🔄 Actualizando cliente seleccionado en el panel de detalles');
+        setSelectedClient(updatedClient);
+      }
+      
+      console.log('✅ Cliente actualizado exitosamente en el estado');
+      return { success: true, data: updatedClient };
+    } catch (error) {
+      console.error('❌ Error al actualizar cliente:', error);
+      console.error('❌ Respuesta de error:', error.response?.data);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Error al actualizar cliente' 
+      };
     }
   };
 
@@ -127,13 +175,13 @@ const useDataCliente = () => {
     try {
       console.log('➕ Agregando nuevo cliente:', clientData);
       
-      // Mapear datos del frontend al formato del backend de Render
       const dataToSend = {
         nombre: clientData.nombre || clientData.firstName || '',
         producto: clientData.producto || '',
         fechaPedido: clientData.fechaPedido || clientData.birthDate || '',
         telefono: clientData.telefono || clientData.phone || '',
-        dirrecion: clientData.dirrecion || clientData.address || ''
+        dirrecion: clientData.dirrecion || clientData.address || '',
+        estado: clientData.estado || 'pendiente'
       };
       
       const response = await axios.post(`${API_URL}/clientes`, dataToSend, {
@@ -146,14 +194,15 @@ const useDataCliente = () => {
       const newClient = response.data.data || response.data;
       const normalizedClient = {
         ...newClient,
-        firstName: newClient.nombre || newClient.firstName || newClient.firtsName || '',
+        firstName: newClient.nombre || newClient.firstName || '',
         lastName: newClient.lastName || '',
         email: newClient.email || '',
         idNumber: newClient.idNumber || '',
         birthDate: newClient.fechaPedido || newClient.birthDate || null,
         phone: newClient.telefono || newClient.phone || '',
         address: newClient.dirrecion || newClient.address || '',
-        producto: newClient.producto || ''
+        producto: newClient.producto || '',
+        estado: newClient.estado || 'pendiente'
       };
       
       setClients(prev => Array.isArray(prev) ? [...prev, normalizedClient] : [normalizedClient]);
@@ -168,62 +217,6 @@ const useDataCliente = () => {
     }
   };
 
-  // Función para actualizar un cliente
-  const updateClient = async (clientId, updateData) => {
-    try {
-      console.log(`📝 Actualizando cliente ${clientId}:`, updateData);
-      
-      // Mapear datos del frontend al formato del backend de Render
-      const dataToSend = {
-        nombre: updateData.nombre || updateData.firstName || '',
-        producto: updateData.producto || '',
-        fechaPedido: updateData.fechaPedido || updateData.birthDate || '',
-        telefono: updateData.telefono || updateData.phone || '',
-        dirrecion: updateData.dirrecion || updateData.address || ''
-      };
-      
-      const response = await axios.put(`${API_URL}/clientes/${clientId}`, dataToSend, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000
-      });
-      
-      const updatedClientData = response.data.cliente || response.data.data || { ...selectedClient, ...updateData };
-      const updatedClient = {
-        ...updatedClientData,
-        firstName: updatedClientData.nombre || updatedClientData.firstName || updatedClientData.firtsName || '',
-        lastName: updatedClientData.lastName || '',
-        email: updatedClientData.email || '',
-        idNumber: updatedClientData.idNumber || '',
-        birthDate: updatedClientData.fechaPedido || updatedClientData.birthDate || null,
-        phone: updatedClientData.telefono || updatedClientData.phone || '',
-        address: updatedClientData.dirrecion || updatedClientData.address || '',
-        producto: updatedClientData.producto || ''
-      };
-      
-      setClients(prev => 
-        Array.isArray(prev) 
-          ? prev.map(client => client._id === clientId ? updatedClient : client)
-          : [updatedClient]
-      );
-      
-      // Actualizar el cliente seleccionado si es el mismo
-      if (selectedClient && selectedClient._id === clientId) {
-        setSelectedClient(updatedClient);
-      }
-      
-      console.log('✅ Cliente actualizado exitosamente');
-      return { success: true, data: updatedClient };
-    } catch (error) {
-      console.error('❌ Error al actualizar cliente:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al actualizar cliente' 
-      };
-    }
-  };
-
   // Función para eliminar un cliente
   const deleteClient = async (clientId) => {
     try {
@@ -233,7 +226,6 @@ const useDataCliente = () => {
       });
       setClients(prev => Array.isArray(prev) ? prev.filter(client => client._id !== clientId) : []);
       
-      // Limpiar selección si se elimina el cliente seleccionado
       if (selectedClient && selectedClient._id === clientId) {
         setSelectedClient(null);
         setShowDetailView(false);
@@ -250,15 +242,15 @@ const useDataCliente = () => {
     }
   };
 
-  // Función para filtrar clientes - WITH SAFETY CHECK
+  // Función para filtrar clientes
   const filteredClients = Array.isArray(clients) ? clients.filter((client) =>
-    [client.firstName, client.lastName, client.idNumber, client.email, client.phone, client.producto]
+    [client.firstName, client.lastName, client.idNumber, client.email, client.phone, client.producto, client.nombre]
       .join(' ')
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   ) : [];
 
-  // Función para ordenar clientes - WITH SAFETY CHECK
+  // Función para ordenar clientes
   const sortedClients = Array.isArray(filteredClients) ? [...filteredClients].sort((a, b) => {
     switch (sortBy) {
       case 'Newest':
@@ -309,19 +301,6 @@ const useDataCliente = () => {
       hasResults: filteredArray.length > 0
     };
   };
-
-  // Efecto para debugging en desarrollo
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Estado actual de clientes:', {
-        count: clients.length,
-        loading,
-        error,
-        hasData: clients.length > 0,
-        clients: clients.slice(0, 2) // Solo mostrar los primeros 2
-      });
-    }
-  }, [clients, loading, error]);
 
   return {
     // Estados
