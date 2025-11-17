@@ -220,11 +220,11 @@ const Clientes = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #34353A 0%, #2a2b30 100%)'}}>
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex h-[calc(100vh-4rem)]">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex gap-6 h-[calc(100vh-3rem)]">
           {/* Panel Principal */}
-          <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl ${showDetailView ? 'mr-6' : ''} flex flex-col overflow-hidden`}>
+          <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden`}>
             
             {/* Header usando componente EmployeeHeader */}
             <EmployeeHeader 
@@ -241,10 +241,10 @@ const Clientes = () => {
 
             {/* Table Content */}
             <div className="flex-1 overflow-y-auto">
-              <div className="p-8 pt-0">
+              <div className="px-6 pb-4">
                 {loading ? (
                   <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{borderColor: '#5F8EAD'}}></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     <p className="text-gray-500 mt-4">Cargando clientes...</p>
                   </div>
                 ) : error ? (
@@ -253,8 +253,7 @@ const Clientes = () => {
                       <p className="text-red-600 mb-4">{error}</p>
                       <button 
                         onClick={() => window.location.reload()} 
-                        className="px-6 py-2 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md"
-                        style={{backgroundColor: '#ef4444'}}
+                        className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md"
                       >
                         Reintentar
                       </button>
@@ -269,24 +268,22 @@ const Clientes = () => {
                       {searchTerm ? (
                         <button 
                           onClick={() => setSearchTerm('')}
-                          className="mt-2 px-4 py-2 text-white rounded-lg transition-colors shadow-md hover:shadow-lg"
-                          style={{backgroundColor: '#5F8EAD'}}
+                          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
                         >
                           Limpiar búsqueda
                         </button>
                       ) : (
                         <button 
                           onClick={handleAddClient}
-                          className="mt-4 flex items-center space-x-2 px-6 py-3 mx-auto text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                          style={{backgroundColor: '#5F8EAD'}}
+                          className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition-all shadow-lg"
                         >
-                          <span>Agregar primer cliente</span>
+                          Agregar primer cliente
                         </button>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 pt-4">
+                  <div className="space-y-2 mt-2">
                     {/* Usando componente ClienteRow para cada fila */}
                     {getCurrentPageClients().map((client, index) => (
                       <ClienteRow
@@ -303,51 +300,52 @@ const Clientes = () => {
             </div>
 
             {/* Footer con paginación */}
-            <div className="p-8 pt-4 border-t border-gray-100" style={{backgroundColor: '#f8fafc'}}>
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                  Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, clients.length)} de {clients.length} clientes
-                  {searchTerm && ` (filtrado de ${stats.total} total)`}
-                </div>
-                
-                <div className="flex items-center space-x-1">
-                  <button 
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-3 hover:bg-white rounded-xl transition-colors shadow-sm border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-gray-500" />
-                  </button>
-                  <div className="flex space-x-1">
-                    {getPageNumbers().map((page, index) => (
-                      page === '...' ? (
-                        <span key={index} className="w-10 h-10 flex items-center justify-center text-gray-400">...</span>
-                      ) : (
-                        <button 
-                          key={index}
-                          onClick={() => handlePageChange(page)}
-                          className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${
-                            currentPage === page
-                              ? 'text-white shadow-sm'
-                              : 'text-gray-700 border border-gray-200 hover:bg-white'
-                          }`}
-                          style={currentPage === page ? {backgroundColor: '#5F8EAD'} : {}}
-                        >
-                          {page}
-                        </button>
-                      )
-                    ))}
+            {stats.hasResults && (
+              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-500">
+                    Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, clients.length)} de {clients.length} clientes
+                    {searchTerm && ` (filtrado de ${stats.total} total)`}
                   </div>
-                  <button 
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-3 hover:bg-white rounded-xl transition-colors shadow-sm border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="w-4 h-4 text-gray-500" />
-                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    <button 
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="p-2 hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <div className="flex space-x-1">
+                      {getPageNumbers().map((page, index) => (
+                        page === '...' ? (
+                          <span key={index} className="w-9 h-9 flex items-center justify-center text-gray-400">...</span>
+                        ) : (
+                          <button 
+                            key={index}
+                            onClick={() => handlePageChange(page)}
+                            className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === page
+                                ? 'bg-blue-500 text-white'
+                                : 'text-gray-700 hover:bg-white'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="p-2 hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-600" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Panel de Detalles usando componente ClienteDetailPanel */}

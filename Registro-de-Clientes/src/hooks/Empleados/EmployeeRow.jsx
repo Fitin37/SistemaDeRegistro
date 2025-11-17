@@ -58,6 +58,10 @@ const ClienteRow = ({
           <span className="truncate">{cliente.dirrecion || 'Sin dirección'}</span>
         </div>
       )}
+      <div className="flex items-center truncate">
+          <MapPin className={`w-4 h-4 mr-2 ${selectedCliente && selectedCliente._id === cliente._id ? 'text-white' : 'text-gray-400'}`} />
+          <span className="truncate">{cliente.estado || 'Sin estado'}</span>
+        </div>
     </div>
   );
 };

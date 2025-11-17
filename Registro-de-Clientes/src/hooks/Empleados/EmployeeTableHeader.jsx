@@ -28,6 +28,10 @@ const EmployeeTableHeader = ({ showDetailView }) => {
               <MapPin className="w-4 h-4 mr-2" />
               Dirección
             </div>
+            <div className="flex items-center">
+              <MapPin className="w-4 h-4 mr-2" />
+              Estado
+            </div>
           </>
         )}
       </div>
