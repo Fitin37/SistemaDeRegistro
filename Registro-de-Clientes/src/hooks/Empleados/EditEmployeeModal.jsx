@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Calendar } from 'lucide-react';
+import { Package, Calendar, CheckCircle } from 'lucide-react';
 
-const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploading }) => {
+const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploading, includeEstado = false }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     producto: '',
     telefono: '',
     dirrecion: '',
-    fechaPedido: ''
+    fechaPedido: '',
+    estado: 'pendiente'
   });
 
   // USEEFFECT PRINCIPAL - Cargar datos del cliente
@@ -32,7 +33,8 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
         producto: cliente.producto || '',
         telefono: cliente.telefono || '',
         dirrecion: cliente.dirrecion || '',
-        fechaPedido: formatDateForInput(cliente.fechaPedido)
+        fechaPedido: formatDateForInput(cliente.fechaPedido),
+        estado: cliente.estado || 'pendiente'
       });
       
       console.log('✅ Datos cargados en el formulario:', {
@@ -40,7 +42,8 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
         producto: cliente.producto || '',
         telefono: cliente.telefono || '',
         dirrecion: cliente.dirrecion || '',
-        fechaPedido: formatDateForInput(cliente.fechaPedido)
+        fechaPedido: formatDateForInput(cliente.fechaPedido),
+        estado: cliente.estado || 'pendiente'
       });
     }
   }, [cliente, isOpen]);
@@ -65,7 +68,8 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
         producto: cliente.producto || '',
         telefono: cliente.telefono || '',
         dirrecion: cliente.dirrecion || '',
-        fechaPedido: formatDateForInput(cliente.fechaPedido)
+        fechaPedido: formatDateForInput(cliente.fechaPedido),
+        estado: cliente.estado || 'pendiente'
       });
     }
   }, [cliente, isOpen, uploading]);
@@ -109,6 +113,12 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
       const fechaISO = new Date(formData.fechaPedido).toISOString();
       dataToSend.fechaPedido = fechaISO;
       console.log('✅ Agregando fecha de pedido:', fechaISO);
+    }
+    
+    // Agregar estado si está habilitado
+    if (includeEstado && formData.estado) {
+      dataToSend.estado = formData.estado;
+      console.log('✅ Agregando estado:', formData.estado);
     }
     
     // Debug: mostrar todos los campos que se van a enviar
@@ -254,17 +264,38 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fecha del Pedido
-                  </label>
-                  <input
-                    type="date"
-                    name="fechaPedido"
-                    value={formData.fechaPedido}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fecha del Pedido
+                    </label>
+                    <input
+                      type="date"
+                      name="fechaPedido"
+                      value={formData.fechaPedido}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
+                    />
+                  </div>
+
+                  {/* Campo de Estado (solo si includeEstado es true) */}
+                  {includeEstado && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Estado del Pedido
+                      </label>
+                      <select
+                        name="estado"
+                        value={formData.estado}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-900 bg-white"
+                      >
+                        <option value="pendiente">🟡 Pendiente</option>
+                        <option value="vendido">✅ Vendido</option>
+                        <option value="devolucion">❌ Devolución</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -329,18 +360,21 @@ const EditClienteModal = ({ isOpen, onClose, onSave, employee: cliente, uploadin
             <button
               onClick={handleSave}
               disabled={uploading}
-              className="px-10 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95 font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="px-10 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95 font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
             >
               {uploading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Actualizando...
-                </span>
+                  <span>Actualizando...</span>
+                </>
               ) : (
-                'Actualizar Cliente'
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Actualizar Cliente</span>
+                </>
               )}
             </button>
           </div>

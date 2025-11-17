@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Phone, Mail, User, ArrowLeft, ChevronLeft, ChevronRight, Users, MapPin, Calendar, CreditCard, Plus, Package, CheckCircle, XCircle, MoreVertical, Edit2, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Lottie from 'lottie-react';
-import sandyLoadingAnimation from '../assets/Sandy Loading.json';
 import useClients from '../hooks/useDataCliente';
 import Swal from 'sweetalert2';
 
-// Importar componentes de empleados
+// Importar componentes de clientes
 import EditEmployeeModal from '../hooks/Empleados/EditEmployeeModal';
 import EmployeeDetailsPanel from '../hooks/Empleados/EmployeDetailsPanel';
 import EmployeeHeader from '../hooks/Empleados/EmployeeHeader';
@@ -37,9 +35,6 @@ const Clientes = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // Estado para la animación de carga del panel de detalles
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  
   // Estados para el menú de acciones en el panel
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const actionsMenuRef = useRef(null);
@@ -47,49 +42,8 @@ const Clientes = () => {
   // Estados para el modal de edición
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    nombre: '',
-    producto: '',
-    fechaPedido: '',
-    telefono: '',
-    dirrecion: '',
-    estado: 'pendiente'
-  });
+  const [uploading, setUploading] = useState(false);
 
-  // Función para obtener configuración de estado
-  const getEstadoConfig = (estado) => {
-    const estadoLower = (estado || '').toLowerCase();
-    
-    const configs = {
-      'vendido': {
-        label: 'Vendido',
-        bgColor: '#10b981',
-        textColor: '#ffffff',
-        icon: CheckCircle,
-        lightBg: '#d1fae5',
-        lightText: '#065f46'
-      },
-      'devolucion': {
-        label: 'Devolución',
-        bgColor: '#ef4444',
-        textColor: '#ffffff',
-        icon: XCircle,
-        lightBg: '#fee2e2',
-        lightText: '#991b1b'
-      },
-      'pendiente': {
-        label: 'Pendiente',
-        bgColor: '#f59e0b',
-        textColor: '#ffffff',
-        icon: Package,
-        lightBg: '#fef3c7',
-        lightText: '#92400e'
-      }
-    };
-    
-    return configs[estadoLower] || configs['pendiente'];
-  };
-  
   // Cerrar menú al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -105,50 +59,15 @@ const Clientes = () => {
   // Función para abrir modal de edición
   const handleEdit = (client) => {
     setEditingClient(client);
-    setEditFormData({
-      nombre: client.firstName || client.nombre || '',
-      producto: client.producto || '',
-      fechaPedido: client.fechaPedido ? new Date(client.fechaPedido).toISOString().split('T')[0] : '',
-      telefono: client.phone || client.telefono || '',
-      dirrecion: client.address || client.dirrecion || '',
-      estado: client.estado || 'pendiente'
-    });
     setShowEditModal(true);
     setShowActionsMenu(false);
   };
   
-  // Función para manejar cambios en el formulario de edición
-  const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
-    
-    let formattedValue = value;
-    if (name === 'telefono') {
-      const numbers = value.replace(/\D/g, '');
-      if (numbers.length >= 4) {
-        formattedValue = numbers.slice(0, 4) + '-' + numbers.slice(4, 8);
-      } else {
-        formattedValue = numbers;
-      }
-    }
-    
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: formattedValue
-    }));
-  };
-  
   // Función para guardar cambios
-  const handleSaveEdit = async () => {
-    // Validar campos requeridos
-    if (!editFormData.nombre.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campo requerido',
-        text: 'El nombre es obligatorio',
-        confirmButtonColor: '#5F8EAD'
-      });
-      return;
-    }
+  const handleSaveEdit = async (dataToSend) => {
+    console.log('💾 Guardando cambios del cliente:', dataToSend);
+    
+    setUploading(true);
     
     Swal.fire({
       title: 'Guardando cambios...',
@@ -158,7 +77,9 @@ const Clientes = () => {
       }
     });
     
-    const result = await updateClient(editingClient._id, editFormData);
+    const result = await updateClient(editingClient._id, dataToSend);
+    
+    setUploading(false);
     
     if (result.success) {
       Swal.fire({
@@ -186,7 +107,7 @@ const Clientes = () => {
     
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      html: `¿Deseas eliminar a <strong>${client.firstName || client.nombre}</strong>?<br/>Esta acción no se puede deshacer.`,
+      html: `¿Deseas eliminar a <strong>${client.nombre}</strong>?<br/>Esta acción no se puede deshacer.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -227,17 +148,10 @@ const Clientes = () => {
     }
   };
 
-  // Efecto para activar loading cuando cambie el cliente seleccionado
-  useEffect(() => {
-    if (selectedClient && showDetailView) {
-      setIsDetailLoading(true);
-      const timer = setTimeout(() => {
-        setIsDetailLoading(false);
-      }, 2500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [selectedClient, showDetailView]);
+  // Manejar click en opciones del panel de detalles
+  const handleOptionsClick = () => {
+    setShowActionsMenu(!showActionsMenu);
+  };
 
   // Obtener clientes para la página actual
   const getCurrentPageClients = () => {
@@ -308,18 +222,21 @@ const Clientes = () => {
         <div className="flex h-[calc(100vh-4rem)]">
           {/* Panel Principal */}
           <div className={`${showDetailView ? 'flex-1' : 'w-full'} bg-white rounded-2xl shadow-2xl ${showDetailView ? 'mr-6' : ''} flex flex-col overflow-hidden`}>
-            {/* Header */}
+            
+            {/* Header usando componente */}
             <EmployeeHeader 
-              stats={stats}
               searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onAddClient={handleAddClient}
+              setSearchTerm={setSearchTerm}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              filterEmpleados={clients}
+              handleContinue={handleAddClient}
             />
 
-            {/* Table Header - Sin columna de Acciones */}
+            {/* Table Header usando componente */}
             <EmployeeTableHeader showDetailView={showDetailView} />
 
-            {/* Table Content - Sin columna de Acciones */}
+            {/* Table Content */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-8 pt-0">
                 {loading ? (
@@ -343,7 +260,6 @@ const Clientes = () => {
                 ) : !stats.hasResults ? (
                   <div className="text-center py-12">
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-8">
-                      <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500 text-lg mb-2">
                         {searchTerm ? 'No se encontraron resultados para tu búsqueda.' : 'No hay clientes registrados.'}
                       </p>
@@ -361,7 +277,6 @@ const Clientes = () => {
                           className="mt-4 flex items-center space-x-2 px-6 py-3 mx-auto text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                           style={{backgroundColor: '#5F8EAD'}}
                         >
-                          <Plus className="w-5 h-5" />
                           <span>Agregar primer cliente</span>
                         </button>
                       )}
@@ -370,13 +285,12 @@ const Clientes = () => {
                 ) : (
                   <div className="space-y-2 pt-4">
                     {getCurrentPageClients().map((client, index) => (
-                      <EmployeeRow
+                      <ClienteRow
                         key={client._id || index}
-                        client={client}
-                        selectedClient={selectedClient}
+                        empleado={client}
                         showDetailView={showDetailView}
-                        onSelectClient={selectClient}
-                        getEstadoConfig={getEstadoConfig}
+                        selectedEmpleados={selectedClient}
+                        selectEmpleado={selectClient}
                       />
                     ))}
                   </div>
@@ -432,33 +346,51 @@ const Clientes = () => {
             </div>
           </div>
 
-          {/* Panel de Detalles */}
+          {/* Panel de Detalles usando componente */}
           {showDetailView && selectedClient && (
-            <EmployeeDetailsPanel
-              selectedClient={selectedClient}
-              isDetailLoading={isDetailLoading}
-              sandyLoadingAnimation={sandyLoadingAnimation}
-              showActionsMenu={showActionsMenu}
-              actionsMenuRef={actionsMenuRef}
-              onCloseDetail={closeDetailView}
-              onToggleActionsMenu={() => setShowActionsMenu(!showActionsMenu)}
-              onEdit={() => handleEdit(selectedClient)}
-              onDelete={() => handleDelete(selectedClient)}
-              getEstadoConfig={getEstadoConfig}
-            />
+            <div className="relative">
+              <ClienteDetailPanel
+                selectedEmpleados={selectedClient}
+                closeDetailView={closeDetailView}
+                handleOptionsClick={handleOptionsClick}
+              />
+              
+              {/* Menú de acciones flotante */}
+              {showActionsMenu && (
+                <div 
+                  ref={actionsMenuRef}
+                  className="absolute right-8 top-20 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden"
+                >
+                  <button
+                    onClick={() => handleEdit(selectedClient)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 text-gray-700 transition-colors"
+                  >
+                    <span>✏️</span>
+                    <span>Editar</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(selectedClient)}
+                    className="w-full px-4 py-3 text-left hover:bg-red-50 flex items-center space-x-3 text-red-600 transition-colors"
+                  >
+                    <span>🗑️</span>
+                    <span>Eliminar</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
       
-      {/* Modal de Edición */}
-      {showEditModal && (
-        <EditEmployeeModal
-          editFormData={editFormData}
-          onFormChange={handleEditFormChange}
-          onSave={handleSaveEdit}
-          onClose={() => setShowEditModal(false)}
-        />
-      )}
+      {/* Modal de Edición usando componente - CON ESTADO */}
+      <EditClienteModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleSaveEdit}
+        employee={editingClient}
+        uploading={uploading}
+        includeEstado={true}
+      />
     </div>
   );
 };
