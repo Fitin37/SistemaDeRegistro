@@ -86,10 +86,10 @@ const ClienteRow = ({
               selectedCliente && selectedCliente._id === cliente._id
                 ? 'bg-white bg-opacity-20 text-white'
                 : cliente.estado === 'vendido' 
-                  ? 'bg-yellow-100 text-yellow-700' 
+                  ? 'bg-green-100 text-green-700' 
                   : cliente.estado === 'devolucion'
                     ? 'bg-red-100 text-red-700'
-                    : 'bg-orange-100 text-orange-700'
+                    : 'bg-yellow-100 text-yellow-700'
             }`}
           >
             {cliente.estado === 'vendido' ? 'Vendido' : cliente.estado === 'devolucion' ? 'Devolución' : 'Pendiente'}
