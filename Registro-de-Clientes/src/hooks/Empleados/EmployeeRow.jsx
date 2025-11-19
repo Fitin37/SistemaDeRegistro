@@ -85,14 +85,14 @@ const ClienteRow = ({
             className={`px-3 py-1 rounded-full text-xs font-medium truncate ${
               selectedCliente && selectedCliente._id === cliente._id
                 ? 'bg-white bg-opacity-20 text-white'
-                : cliente.estado === 'Activo' 
-                  ? 'bg-green-100 text-green-700' 
-                  : cliente.estado === 'Inactivo'
-                    ? 'bg-gray-100 text-gray-700'
-                    : 'bg-yellow-100 text-yellow-700'
+                : cliente.estado === 'vendido' 
+                  ? 'bg-yellow-100 text-yellow-700' 
+                  : cliente.estado === 'devolucion'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-orange-100 text-orange-700'
             }`}
           >
-            {cliente.estado || 'Sin estado'}
+            {cliente.estado === 'vendido' ? 'Vendido' : cliente.estado === 'devolucion' ? 'Devolución' : 'Pendiente'}
           </span>
         </div>
       )}
